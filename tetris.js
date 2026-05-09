@@ -93,6 +93,7 @@ class Game {
     constructor() {
         this.board = this.createBoard();
         this.score = 0;
+        this.moves = 0;
         this.level = 1;
         this.lines = 0;
         this.gameActive = false;
@@ -138,6 +139,8 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.nextCanvas = document.getElementById('nextCanvas');
         this.nextCtx = this.nextCanvas.getContext('2d');
+        this.mobileNextCanvas = document.getElementById('mobileNextCanvas');
+        this.mobileNextCtx = this.mobileNextCanvas ? this.mobileNextCanvas.getContext('2d') : null;
         this.holdCanvas = document.getElementById('holdCanvas');
         this.holdCtx = this.holdCanvas ? this.holdCanvas.getContext('2d') : null;
         this.fxMessageEl = document.getElementById('fxMessage');
@@ -184,6 +187,7 @@ class Game {
     init() {
         this.board = this.createBoard();
         this.score = 0;
+        this.moves = 0;
         this.level = 1;
         this.lines = 0;
         this.gameActive = true;
@@ -519,6 +523,11 @@ class Game {
             this.holdCanvas.style.width = `${Math.round(nextBase * nextScale)}px`;
             this.holdCanvas.style.height = `${Math.round(nextBase * nextScale)}px`;
         }
+        if (this.mobileNextCanvas) {
+            const mobileSize = isMobileLayout ? 56 : 64;
+            this.mobileNextCanvas.style.width = `${mobileSize}px`;
+            this.mobileNextCanvas.style.height = `${mobileSize}px`;
+        }
     }
 
     refillBag() {
@@ -668,6 +677,7 @@ class Game {
     }
 
     placePiece(piece) {
+        this.moves++;
         const shape = piece.data.rotations[piece.rotation];
 
         for (let y = 0; y < shape.length; y++) {
@@ -893,9 +903,8 @@ class Game {
             this.shakeFrames--;
         }
 
-        // Clear canvas
-        this.ctx.fillStyle = '#000000';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Clear and render blue playfield background.
+        this.drawPlayfieldBackground();
 
         // Draw board
         this.drawBoard();
@@ -1019,6 +1028,9 @@ class Game {
 
     drawNextPreview() {
         this.drawPreviewPiece(this.nextCtx, this.nextPiece);
+        if (this.mobileNextCtx) {
+            this.drawPreviewPiece(this.mobileNextCtx, this.nextPiece);
+        }
     }
 
     drawHoldPreview() {
@@ -1027,14 +1039,16 @@ class Game {
     }
 
     drawPreviewPiece(targetCtx, piece) {
-        targetCtx.fillStyle = '#000000';
-        targetCtx.fillRect(0, 0, 120, 120);
+        const previewWidth = targetCtx.canvas.width;
+        const previewHeight = targetCtx.canvas.height;
+        targetCtx.fillStyle = '#102a88';
+        targetCtx.fillRect(0, 0, previewWidth, previewHeight);
         if (!piece) return;
 
         const shape = piece.data.rotations[piece.rotation];
-        const blockSize = 20;
-        const offsetX = (120 - shape[0].length * blockSize) / 2;
-        const offsetY = (120 - shape.length * blockSize) / 2;
+        const blockSize = Math.max(12, Math.floor(Math.min(previewWidth, previewHeight) / 6));
+        const offsetX = (previewWidth - shape[0].length * blockSize) / 2;
+        const offsetY = (previewHeight - shape.length * blockSize) / 2;
 
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
@@ -1056,6 +1070,31 @@ class Game {
         document.getElementById('scoreDisplay').textContent = this.score;
         document.getElementById('levelDisplay').textContent = this.level;
         document.getElementById('linesDisplay').textContent = this.lines;
+
+        const movesEl = document.getElementById('movesDisplay');
+        if (movesEl) {
+            movesEl.textContent = this.moves;
+        }
+
+        const targetEl = document.getElementById('targetDisplay');
+        if (targetEl) {
+            const mod = this.lines % 10;
+            const remain = mod === 0 ? 10 : 10 - mod;
+            targetEl.textContent = `CLEAR ${remain} LINES`;
+        }
+    }
+
+    drawPlayfieldBackground() {
+        this.ctx.fillStyle = '#0b257e';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        for (let y = 0; y < BOARD_HEIGHT; y++) {
+            for (let x = 0; x < BOARD_WIDTH; x++) {
+                const evenCell = (x + y) % 2 === 0;
+                this.ctx.fillStyle = evenCell ? 'rgba(255, 255, 255, 0.035)' : 'rgba(255, 255, 255, 0.015)';
+                this.ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+            }
+        }
     }
 
     gameLoop() {

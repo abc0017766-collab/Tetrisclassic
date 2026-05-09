@@ -15,6 +15,21 @@
     </div>
 
     <div id="gameSection" class="game-container hidden-view">
+        <div class="mobile-hud">
+            <div class="hud-card">
+                <div class="hud-label">MOVES</div>
+                <div class="hud-value" id="movesDisplay">0</div>
+            </div>
+            <div class="hud-card hud-card-target">
+                <div class="hud-label">TARGET</div>
+                <div class="hud-value" id="targetDisplay">CLEAR 10 LINES</div>
+            </div>
+            <div class="hud-card hud-card-next">
+                <div class="hud-label">NEXT</div>
+                <canvas id="mobileNextCanvas" width="64" height="64"></canvas>
+            </div>
+        </div>
+
         <div class="game-actions">
             <button id="pauseBtn" class="action-btn" type="button">PAUSE</button>
             <button id="holdBtn" class="action-btn" type="button">HOLD</button>
