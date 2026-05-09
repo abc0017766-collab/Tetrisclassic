@@ -566,10 +566,16 @@ class Game {
             ? viewportWidth - horizontalPadding
             : viewportWidth - horizontalPadding - desktopSidePanelWidth;
         const availableHeight = isMobileLayout
-            ? Math.max(160, viewportHeight - verticalPadding - chromeSafetyMargin)
+            ? Math.max(
+                160,
+                Math.min(
+                    viewportHeight - verticalPadding - chromeSafetyMargin,
+                    Math.floor(viewportHeight * 0.72)
+                )
+            )
             : viewportHeight - 120;
 
-        const scaleLimit = isMobileLayout ? 1 : 1.25;
+        const scaleLimit = isMobileLayout ? 0.88 : 1.25;
         const minScale = isMobileLayout ? 0.22 : 0.45;
         const scale = Math.max(
             minScale,
@@ -579,7 +585,7 @@ class Game {
             )
         );
 
-        const mobileScaleTuning = isMobileLayout ? 0.93 : 1;
+        const mobileScaleTuning = isMobileLayout ? 0.9 : 1;
         const tunedScale = scale * mobileScaleTuning;
         const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
         const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);
