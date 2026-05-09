@@ -9,7 +9,6 @@ const BLOCK_SIZE = 30;
 const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
-const FAST_DROP_STEPS = 5;
 
 // Piece Colors (RGB values)
 const PIECE_COLORS = {
@@ -403,7 +402,6 @@ class Game {
             this.swipeState.startY = y;
             this.swipeState.startTime = performance.now();
             this.swipeState.pointerId = pointerId;
-            this.fastDropActive = false;
         };
 
         const updateSwipeMove = (x, y) => {
@@ -415,7 +413,12 @@ class Game {
             const dx = x - this.swipeState.startX;
             const dy = y - this.swipeState.startY;
             const slideDownThreshold = Math.max(14, Math.round(this.canvas.clientHeight * 0.03));
-            this.fastDropActive = dy > slideDownThreshold && Math.abs(dy) > Math.abs(dx);
+            if (dy > slideDownThreshold && Math.abs(dy) > Math.abs(dx)) {
+                this.fastDropActive = true;
+            }
+            if (dy < -slideDownThreshold && Math.abs(dy) > Math.abs(dx)) {
+                this.fastDropActive = false;
+            }
         };
 
         const endSwipe = (x, y) => {
@@ -433,6 +436,10 @@ class Game {
 
             const swipeThreshold = Math.max(24, Math.round(this.canvas.clientWidth * 0.08));
             const tapThreshold = Math.max(22, Math.round(this.canvas.clientWidth * 0.06));
+
+            if (this.fastDropActive) {
+                return;
+            }
 
             // Single tap to rotate.
             if (absX < tapThreshold && absY < tapThreshold && elapsed < 360) {
@@ -474,13 +481,11 @@ class Game {
             if (event.pointerType !== 'touch') return;
             if (event.pointerId !== this.swipeState.pointerId) return;
             endSwipe(event.clientX, event.clientY);
-            this.fastDropActive = false;
         }, { passive: true });
 
         this.canvas.addEventListener('pointercancel', () => {
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
-            this.fastDropActive = false;
         }, { passive: true });
 
         // Touch fallback for browsers that do not dispatch pointer events consistently.
@@ -503,13 +508,11 @@ class Game {
             if (!this.swipeState.tracking) return;
             const touch = event.changedTouches[0];
             endSwipe(touch.clientX, touch.clientY);
-            this.fastDropActive = false;
         }, { passive: false });
 
         this.canvas.addEventListener('touchcancel', () => {
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
-            this.fastDropActive = false;
         }, { passive: true });
     }
 
@@ -926,15 +929,10 @@ class Game {
             this.dropCounter = 0;
         }
 
-        // Drag-down fast fall: attempt multiple down steps each frame.
+        // Drag-down lock mode: instantly drop piece until user drags up.
         if (this.fastDropActive && this.currentPiece) {
-            for (let i = 0; i < FAST_DROP_STEPS; i++) {
-                if (!this.softDrop(this.currentPiece)) {
-                    this.placePiece(this.currentPiece);
-                    this.spawnNewPiece();
-                    break;
-                }
-            }
+            this.hardDrop(this.currentPiece);
+            return;
         }
 
         // Continuous movement (held keys) with delay
