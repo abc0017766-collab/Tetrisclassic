@@ -1021,43 +1021,40 @@ class Game {
     }
 
     drawStyledBlock(targetCtx, x, y, size, color, alpha = 1) {
-        const pad = 1;
-        const blockX = x + pad;
-        const blockY = y + pad;
-        const blockSize = Math.max(4, size - pad * 2);
+        const blockX = x + 1;
+        const blockY = y + 1;
+        const blockSize = Math.max(4, size - 2);
 
         targetCtx.save();
         targetCtx.globalAlpha = alpha;
 
+        // Main tile fill with gentle top-to-bottom ramp.
         const fillGradient = targetCtx.createLinearGradient(blockX, blockY, blockX, blockY + blockSize);
-        fillGradient.addColorStop(0, this.shiftColor(color, 45));
-        fillGradient.addColorStop(0.42, color);
-        fillGradient.addColorStop(1, this.shiftColor(color, -55));
+        fillGradient.addColorStop(0, this.shiftColor(color, 24));
+        fillGradient.addColorStop(0.55, color);
+        fillGradient.addColorStop(1, this.shiftColor(color, -30));
         targetCtx.fillStyle = fillGradient;
         targetCtx.fillRect(blockX, blockY, blockSize, blockSize);
 
-        // Top bevel highlight.
-        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.28)';
-        targetCtx.fillRect(blockX + 1, blockY + 1, Math.max(1, blockSize - 2), Math.max(1, Math.floor(blockSize * 0.22)));
+        // Pixel-style highlight on top and left edges.
+        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.32)';
+        targetCtx.fillRect(blockX + 1, blockY + 1, Math.max(1, blockSize - 2), 2);
+        targetCtx.fillRect(blockX + 1, blockY + 1, 2, Math.max(1, blockSize - 2));
 
-        // Bottom shadow bevel.
-        targetCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        // Bottom and right shadow for depth.
+        targetCtx.fillStyle = 'rgba(0, 0, 0, 0.24)';
         targetCtx.fillRect(
             blockX + 1,
-            blockY + blockSize - Math.max(1, Math.floor(blockSize * 0.2)),
-            Math.max(1, blockSize - 2),
-            Math.max(1, Math.floor(blockSize * 0.2) - 1)
+            blockY + blockSize - 2,
+            Math.max(1, blockSize - 1),
+            2
         );
+        targetCtx.fillRect(blockX + blockSize - 2, blockY + 1, 2, Math.max(1, blockSize - 1));
 
-        // Crisp inner border to separate each tile.
-        targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        // Strong border so each cell stays visually distinct.
+        targetCtx.strokeStyle = 'rgba(7, 20, 80, 0.95)';
         targetCtx.lineWidth = 1;
         targetCtx.strokeRect(blockX + 0.5, blockY + 0.5, blockSize - 1, blockSize - 1);
-
-        // Outer border for strong piece silhouette.
-        targetCtx.strokeStyle = this.shiftColor(color, -75);
-        targetCtx.lineWidth = 1;
-        targetCtx.strokeRect(blockX - 0.5, blockY - 0.5, blockSize + 1, blockSize + 1);
 
         targetCtx.restore();
     }
