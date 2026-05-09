@@ -189,38 +189,25 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
     body {
+        overflow: hidden;
+        min-height: 100dvh;
         align-items: flex-start;
     }
 
     .game-container {
         justify-content: flex-start;
-        padding: 12px;
+        padding: 6px;
     }
 
     .game-content {
         flex-direction: column;
-        gap: 14px;
+        gap: 0;
         align-items: center;
+        width: 100%;
     }
 
     .side-panel {
-        min-width: 0;
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .panel-section {
-        flex: 1;
-        min-width: 120px;
-        padding: 12px;
-    }
-
-    .controls-info {
-        width: 100%;
-        font-size: 7px;
-        line-height: 1.6;
+        display: none;
     }
 
     .game-title {

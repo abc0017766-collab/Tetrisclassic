@@ -264,12 +264,13 @@ class Game {
     resizeCanvases() {
         const isMobileLayout = window.innerWidth <= 768;
         const desktopSidePanelWidth = 240;
-        const horizontalPadding = isMobileLayout ? 24 : 80;
+        const horizontalPadding = isMobileLayout ? 12 : 80;
+        const verticalPadding = isMobileLayout ? 12 : 120;
         const availableWidth = isMobileLayout
             ? window.innerWidth - horizontalPadding
             : window.innerWidth - horizontalPadding - desktopSidePanelWidth;
         const availableHeight = isMobileLayout
-            ? Math.max(220, window.innerHeight * 0.5)
+            ? Math.max(300, window.innerHeight - verticalPadding)
             : window.innerHeight - 120;
 
         const scale = Math.max(
@@ -287,7 +288,7 @@ class Game {
         this.canvas.style.height = `${scaledHeight}px`;
 
         const nextBase = 120;
-        const nextScale = isMobileLayout ? 0.85 : 1;
+        const nextScale = isMobileLayout ? 0.75 : 1;
         this.nextCanvas.style.width = `${Math.round(nextBase * nextScale)}px`;
         this.nextCanvas.style.height = `${Math.round(nextBase * nextScale)}px`;
     }
