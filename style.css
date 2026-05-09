@@ -222,3 +222,34 @@ body {
         font-size: 10px;
     }
 }
+
+@media (hover: none) and (pointer: coarse) {
+    body {
+        overflow: hidden;
+        min-height: 100dvh;
+        align-items: center;
+    }
+
+    .game-container {
+        min-height: 100dvh;
+        justify-content: center;
+        padding: 4px;
+        gap: 0;
+    }
+
+    .game-content {
+        width: 100%;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+    }
+
+    .side-panel {
+        display: none;
+    }
+
+    #gameCanvas {
+        border-width: 2px;
+    }
+}

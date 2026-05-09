@@ -112,7 +112,8 @@ class Game {
             tracking: false,
             startX: 0,
             startY: 0,
-            startTime: 0
+            startTime: 0,
+            pointerId: null
         };
 
         // Input tracking
@@ -202,30 +203,23 @@ class Game {
     }
 
     bindSwipeControls() {
-        const startSwipe = (event) => {
-            if (event.touches.length !== 1) return;
-
-            const touch = event.touches[0];
+        const startSwipe = (x, y, pointerId = null) => {
             this.swipeState.tracking = true;
-            this.swipeState.startX = touch.clientX;
-            this.swipeState.startY = touch.clientY;
+            this.swipeState.startX = x;
+            this.swipeState.startY = y;
             this.swipeState.startTime = performance.now();
+            this.swipeState.pointerId = pointerId;
         };
 
-        const trackSwipe = (event) => {
-            if (!this.swipeState.tracking) return;
-            event.preventDefault();
-        };
-
-        const endSwipe = (event) => {
+        const endSwipe = (x, y) => {
             if (!this.swipeState.tracking) return;
             this.swipeState.tracking = false;
+            this.swipeState.pointerId = null;
 
             if (!this.gameActive || this.gamePaused || !this.currentPiece) return;
 
-            const touch = event.changedTouches[0];
-            const dx = touch.clientX - this.swipeState.startX;
-            const dy = touch.clientY - this.swipeState.startY;
+            const dx = x - this.swipeState.startX;
+            const dy = y - this.swipeState.startY;
             const absX = Math.abs(dx);
             const absY = Math.abs(dy);
             const elapsed = performance.now() - this.swipeState.startTime;
@@ -253,30 +247,72 @@ class Game {
             }
         };
 
-        this.canvas.addEventListener('touchstart', startSwipe, { passive: true });
-        this.canvas.addEventListener('touchmove', trackSwipe, { passive: false });
-        this.canvas.addEventListener('touchend', endSwipe, { passive: true });
+        this.canvas.addEventListener('pointerdown', (event) => {
+            if (event.pointerType !== 'touch') return;
+            event.preventDefault();
+            startSwipe(event.clientX, event.clientY, event.pointerId);
+        }, { passive: false });
+
+        this.canvas.addEventListener('pointermove', (event) => {
+            if (!this.swipeState.tracking) return;
+            if (event.pointerId !== this.swipeState.pointerId) return;
+            if (event.pointerType !== 'touch') return;
+            event.preventDefault();
+        }, { passive: false });
+
+        this.canvas.addEventListener('pointerup', (event) => {
+            if (event.pointerType !== 'touch') return;
+            if (event.pointerId !== this.swipeState.pointerId) return;
+            endSwipe(event.clientX, event.clientY);
+        }, { passive: true });
+
+        this.canvas.addEventListener('pointercancel', () => {
+            this.swipeState.tracking = false;
+            this.swipeState.pointerId = null;
+        }, { passive: true });
+
+        // Touch fallback for browsers that do not dispatch pointer events consistently.
+        this.canvas.addEventListener('touchstart', (event) => {
+            if (event.touches.length !== 1) return;
+            const touch = event.touches[0];
+            startSwipe(touch.clientX, touch.clientY, null);
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchmove', (event) => {
+            if (!this.swipeState.tracking) return;
+            event.preventDefault();
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', (event) => {
+            if (!this.swipeState.tracking) return;
+            const touch = event.changedTouches[0];
+            endSwipe(touch.clientX, touch.clientY);
+        }, { passive: true });
+
         this.canvas.addEventListener('touchcancel', () => {
             this.swipeState.tracking = false;
+            this.swipeState.pointerId = null;
         }, { passive: true });
     }
 
     resizeCanvases() {
-        const isMobileLayout = window.innerWidth <= 768;
+        const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        const isMobileLayout = window.innerWidth <= 768 || isTouchDevice;
         const desktopSidePanelWidth = 240;
         const horizontalPadding = isMobileLayout ? 12 : 80;
-        const verticalPadding = isMobileLayout ? 12 : 120;
+        const verticalPadding = isMobileLayout ? 8 : 120;
         const availableWidth = isMobileLayout
             ? window.innerWidth - horizontalPadding
             : window.innerWidth - horizontalPadding - desktopSidePanelWidth;
         const availableHeight = isMobileLayout
-            ? Math.max(300, window.innerHeight - verticalPadding)
+            ? Math.max(340, window.innerHeight - verticalPadding)
             : window.innerHeight - 120;
 
+        const scaleLimit = isMobileLayout ? 2 : 1.25;
         const scale = Math.max(
             0.45,
             Math.min(
-                1.25,
+                scaleLimit,
                 Math.min(availableWidth / this.baseCanvasWidth, availableHeight / this.baseCanvasHeight)
             )
         );
