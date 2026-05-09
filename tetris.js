@@ -247,10 +247,6 @@ class Game {
             });
         }
 
-        if (this.holdBtn) {
-            this.holdBtn.addEventListener('click', () => this.holdCurrentPiece());
-        }
-
         if (this.soundBtn) {
             this.soundBtn.addEventListener('click', () => {
                 this.soundEnabled = !this.soundEnabled;
@@ -1179,6 +1175,11 @@ class Game {
         document.getElementById('scoreDisplay').textContent = this.score;
         document.getElementById('levelDisplay').textContent = this.level;
         document.getElementById('linesDisplay').textContent = this.lines;
+
+        const mobileScoreEl = document.getElementById('mobileScoreDisplay');
+        if (mobileScoreEl) {
+            mobileScoreEl.textContent = this.score;
+        }
 
         const mobileLevelEl = document.getElementById('mobileLevelDisplay');
         if (mobileLevelEl) {

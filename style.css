@@ -94,7 +94,7 @@ body.in-game #mainMenu {
 .mobile-hud {
     display: none;
     width: min(560px, 100%);
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
     margin-bottom: 4px;
 }
@@ -335,6 +335,24 @@ body.in-game #mainMenu {
     .mobile-hud {
         display: grid;
         gap: 4px;
+    }
+
+    .mobile-hud .hud-card {
+        min-height: 42px;
+        padding: 4px;
+    }
+
+    .mobile-hud .hud-label {
+        font-size: 6px;
+        margin-bottom: 3px;
+    }
+
+    .mobile-hud .hud-value {
+        font-size: 9px;
+    }
+
+    .mobile-hud .hud-card-target .hud-value {
+        font-size: 7px;
     }
 
     .game-actions {
