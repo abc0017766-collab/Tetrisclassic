@@ -113,6 +113,13 @@
         </div>
     </div>
 
-    <script src="tetris.js?v=20260509b"></script>
+    <script>
+        // Force fresh game logic on each load to avoid stale mobile cache.
+        (function loadLatestGameScript() {
+            const script = document.createElement('script');
+            script.src = `tetris.js?cb=${Date.now()}`;
+            document.body.appendChild(script);
+        })();
+    </script>
 </body>
 </html>
