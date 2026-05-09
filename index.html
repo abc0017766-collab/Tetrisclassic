@@ -25,6 +25,26 @@
         <h1 class="game-title">TETRIS</h1>
         <p class="overlay-text">CLASSIC</p>
         <button id="startGameBtn" class="menu-btn" type="button">START GAME</button>
+        <button id="competitionBtn" class="menu-btn" type="button">COMPETITION</button>
+    </div>
+
+    <div id="competitionSection" class="competition-page hidden-view">
+        <h1 class="game-title">COMPETITION</h1>
+        <div class="competition-entry">
+            <input id="competitionNameInput" class="competition-input" type="text" maxlength="20" placeholder="ENTER NAME" aria-label="Player name">
+            <button id="competitionStartBtn" class="menu-btn" type="button">START GAME</button>
+            <button id="competitionBackBtn" class="menu-btn" type="button">BACK</button>
+        </div>
+        <div class="competition-leaderboards">
+            <section class="leaderboard-panel" aria-label="Top 10 highest scores">
+                <h2 class="leaderboard-title">TOP 10</h2>
+                <ol id="topScoresList" class="leaderboard-list"></ol>
+            </section>
+            <section class="leaderboard-panel" aria-label="Latest 10 user scores">
+                <h2 class="leaderboard-title">LATEST 10</h2>
+                <ol id="latestScoresList" class="leaderboard-list"></ol>
+            </section>
+        </div>
     </div>
 
     <div id="gameSection" class="game-container hidden-view">

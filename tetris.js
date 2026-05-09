@@ -12,6 +12,7 @@ const HARD_DROP_BONUS = 2;
 const FAST_DROP_STEPS = 2;
 const LOCK_DELAY_MS = 800;
 const BGM_BEAT_SECONDS = 0.34;
+const LEADERBOARD_STORAGE_KEY = 'tetrisCompetitionScoresV1';
 
 // Relaxed ambient loop (generated with Web Audio, no external asset).
 const BGM_MELODY = [
@@ -149,6 +150,10 @@ class Game {
         this.bgmIntervalId = null;
         this.bgmStep = 0;
         this.fxTimeout = null;
+        this.competitionMode = false;
+        this.currentPlayerName = '';
+        this.lastEntryView = 'menu';
+        this.competitionScores = [];
         this.baseCanvasWidth = BOARD_WIDTH * BLOCK_SIZE;
         this.baseCanvasHeight = BOARD_HEIGHT * BLOCK_SIZE;
         this.loopStarted = false;
@@ -184,13 +189,23 @@ class Game {
 
         // Main menu and game controls
         this.mainMenu = document.getElementById('mainMenu');
+        this.competitionSection = document.getElementById('competitionSection');
         this.gameSection = document.getElementById('gameSection');
         this.startGameBtn = document.getElementById('startGameBtn');
+        this.competitionBtn = document.getElementById('competitionBtn');
+        this.competitionStartBtn = document.getElementById('competitionStartBtn');
+        this.competitionBackBtn = document.getElementById('competitionBackBtn');
+        this.competitionNameInput = document.getElementById('competitionNameInput');
         this.pauseBtn = document.getElementById('pauseBtn');
         this.shadowBtn = document.getElementById('shadowBtn');
         this.holdBtn = document.getElementById('holdBtn');
         this.soundBtn = document.getElementById('soundBtn');
         this.endBtn = document.getElementById('endBtn');
+        this.topScoresList = document.getElementById('topScoresList');
+        this.latestScoresList = document.getElementById('latestScoresList');
+
+        this.loadCompetitionScores();
+        this.renderCompetitionBoards();
 
         // Bind input handlers
         window.addEventListener('keydown', (e) => this.handleKeyDown(e));
@@ -275,7 +290,33 @@ class Game {
 
     bindMainControls() {
         if (this.startGameBtn) {
-            this.startGameBtn.addEventListener('click', () => this.startGame());
+            this.startGameBtn.addEventListener('click', () => {
+                this.competitionMode = false;
+                this.currentPlayerName = '';
+                this.lastEntryView = 'menu';
+                this.startGame();
+            });
+        }
+
+        if (this.competitionBtn) {
+            this.competitionBtn.addEventListener('click', () => this.showCompetitionSection());
+        }
+
+        if (this.competitionStartBtn) {
+            this.competitionStartBtn.addEventListener('click', () => this.startCompetitionGame());
+        }
+
+        if (this.competitionBackBtn) {
+            this.competitionBackBtn.addEventListener('click', () => this.showMainMenu());
+        }
+
+        if (this.competitionNameInput) {
+            this.competitionNameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    this.startCompetitionGame();
+                }
+            });
         }
 
         if (this.pauseBtn) {
@@ -320,11 +361,34 @@ class Game {
     showMainMenu() {
         document.body.classList.remove('in-game');
         this.mainMenu.hidden = false;
+        this.competitionSection.hidden = true;
         this.gameSection.hidden = true;
         this.mainMenu.classList.remove('hidden-view');
+        this.competitionSection.classList.add('hidden-view');
         this.gameSection.classList.add('hidden-view');
         this.mainMenu.style.display = 'flex';
+        this.competitionSection.style.display = 'none';
         this.gameSection.style.display = 'none';
+        this.lastEntryView = 'menu';
+        this.resizeCanvases();
+    }
+
+    showCompetitionSection() {
+        document.body.classList.remove('in-game');
+        this.mainMenu.hidden = true;
+        this.competitionSection.hidden = false;
+        this.gameSection.hidden = true;
+        this.mainMenu.classList.add('hidden-view');
+        this.competitionSection.classList.remove('hidden-view');
+        this.gameSection.classList.add('hidden-view');
+        this.mainMenu.style.display = 'none';
+        this.competitionSection.style.display = 'flex';
+        this.gameSection.style.display = 'none';
+        this.lastEntryView = 'competition';
+        this.renderCompetitionBoards();
+        if (this.competitionNameInput) {
+            this.competitionNameInput.focus();
+        }
         this.resizeCanvases();
     }
 
@@ -347,6 +411,15 @@ class Game {
         this.playSfx('start');
     }
 
+    startCompetitionGame() {
+        const rawName = this.competitionNameInput ? this.competitionNameInput.value : '';
+        const sanitized = (rawName || '').trim().replace(/\s+/g, ' ');
+        this.currentPlayerName = sanitized || 'PLAYER';
+        this.competitionMode = true;
+        this.lastEntryView = 'competition';
+        this.startGame();
+    }
+
     endToMainMenu() {
         this.gameActive = false;
         this.gamePaused = false;
@@ -361,7 +434,76 @@ class Game {
         }
         this.showFxMessage('', '#00ffcc', 0);
         this.updateBackgroundMusicState();
-        this.showMainMenu();
+        if (this.lastEntryView === 'competition') {
+            this.showCompetitionSection();
+        } else {
+            this.showMainMenu();
+        }
+    }
+
+    loadCompetitionScores() {
+        try {
+            const raw = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
+            const parsed = raw ? JSON.parse(raw) : [];
+            this.competitionScores = Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            this.competitionScores = [];
+        }
+    }
+
+    saveCompetitionScores() {
+        localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(this.competitionScores));
+    }
+
+    recordCompetitionScore() {
+        if (!this.competitionMode) return;
+        const name = (this.currentPlayerName || 'PLAYER').slice(0, 20);
+        const entry = {
+            name,
+            score: this.score,
+            level: this.level,
+            lines: this.lines,
+            ts: Date.now()
+        };
+        this.competitionScores.push(entry);
+        // Keep history bounded to avoid unbounded localStorage growth.
+        if (this.competitionScores.length > 200) {
+            this.competitionScores = this.competitionScores.slice(-200);
+        }
+        this.saveCompetitionScores();
+        this.renderCompetitionBoards();
+    }
+
+    setLeaderboardContent(listEl, entries) {
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        if (!entries.length) {
+            const emptyItem = document.createElement('li');
+            emptyItem.className = 'leaderboard-empty';
+            emptyItem.textContent = 'NO SCORES YET';
+            listEl.appendChild(emptyItem);
+            return;
+        }
+
+        entries.forEach((entry) => {
+            const item = document.createElement('li');
+            item.className = 'leaderboard-item';
+            item.textContent = `${entry.name}  ${entry.score}`;
+            listEl.appendChild(item);
+        });
+    }
+
+    renderCompetitionBoards() {
+        const byScore = [...this.competitionScores]
+            .sort((a, b) => (b.score - a.score) || (a.ts - b.ts))
+            .slice(0, 10);
+        const latest = [...this.competitionScores]
+            .sort((a, b) => b.ts - a.ts)
+            .slice(0, 10);
+
+        this.setLeaderboardContent(this.topScoresList, byScore);
+        this.setLeaderboardContent(this.latestScoresList, latest);
     }
 
     ensureAudioReady() {
@@ -1037,6 +1179,7 @@ class Game {
         this.gameActive = false;
         this.fastDropActive = false;
         this.updateBackgroundMusicState();
+        this.recordCompetitionScore();
         this.playSfx('gameover');
         this.showFxMessage('GAME OVER', '#ff3366', 900);
         document.getElementById('finalScore').textContent = this.score;
