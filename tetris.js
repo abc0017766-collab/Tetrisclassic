@@ -1098,6 +1098,9 @@ class Game {
                         this.lockDelayActive = true;
                         this.lockDelayStart = now;
                     }
+                    // Stop drag-fast mode once grounded so lock-delay movement stays available.
+                    this.fastDropActive = false;
+                    this.fastDropDisabledForPiece = true;
                     break;
                 }
             }
