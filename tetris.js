@@ -6,8 +6,8 @@
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
 const BLOCK_SIZE = 30;
-const GRAVITY_BASE = 0.04; // Base gravity speed (lower = slower)
-const MOVEMENT_DELAY = 4; // Frames between left/right/down movements
+const GRAVITY_BASE = 0.02; // Base gravity speed (lower = slower)
+const MOVEMENT_DELAY = 2; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
 
 // Piece Colors (RGB values)
@@ -124,10 +124,7 @@ class Game {
             startX: 0,
             startY: 0,
             startTime: 0,
-            pointerId: null,
-            lastTapTime: 0,
-            lastTapX: 0,
-            lastTapY: 0
+            pointerId: null
         };
 
         // Input tracking
@@ -420,28 +417,10 @@ class Game {
             const swipeThreshold = Math.max(10, Math.round(this.canvas.clientWidth * 0.03));
             const tapThreshold = Math.max(12, Math.round(this.canvas.clientWidth * 0.025));
 
-            // Double tap to rotate.
+            // Single tap to rotate.
             if (absX < tapThreshold && absY < tapThreshold && elapsed < 280) {
-                const now = performance.now();
-                const doubleTapWindowMs = 320;
-                const doubleTapDistance = 32;
-                const tapDx = Math.abs(x - this.swipeState.lastTapX);
-                const tapDy = Math.abs(y - this.swipeState.lastTapY);
-                const isDoubleTap =
-                    now - this.swipeState.lastTapTime <= doubleTapWindowMs &&
-                    tapDx <= doubleTapDistance &&
-                    tapDy <= doubleTapDistance;
-
-                if (isDoubleTap) {
-                    this.rotate(this.currentPiece);
+                if (this.rotate(this.currentPiece)) {
                     this.playSfx('rotate');
-                    this.swipeState.lastTapTime = 0;
-                    this.swipeState.lastTapX = 0;
-                    this.swipeState.lastTapY = 0;
-                } else {
-                    this.swipeState.lastTapTime = now;
-                    this.swipeState.lastTapX = x;
-                    this.swipeState.lastTapY = y;
                 }
                 return;
             }
