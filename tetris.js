@@ -918,7 +918,7 @@ class Game {
         }
 
         // Gravity
-        const gravity = GRAVITY_BASE + (this.level - 1) * 0.003;
+        const gravity = GRAVITY_BASE + (this.level - 1) * 0.01;
         this.dropCounter += gravity;
 
         if (this.dropCounter >= 1) {
@@ -1164,6 +1164,11 @@ class Game {
         document.getElementById('scoreDisplay').textContent = this.score;
         document.getElementById('levelDisplay').textContent = this.level;
         document.getElementById('linesDisplay').textContent = this.lines;
+
+        const mobileLevelEl = document.getElementById('mobileLevelDisplay');
+        if (mobileLevelEl) {
+            mobileLevelEl.textContent = this.level;
+        }
 
         const movesEl = document.getElementById('movesDisplay');
         if (movesEl) {
