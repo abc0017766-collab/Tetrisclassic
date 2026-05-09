@@ -3,8 +3,8 @@
 // ============================================
 
 // Game Constants
-const BOARD_WIDTH = 10;
-const BOARD_HEIGHT = 20;
+const BOARD_WIDTH = 12;
+const BOARD_HEIGHT = 24;
 const BLOCK_SIZE = 30;
 const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
@@ -547,8 +547,8 @@ class Game {
         const isMobileLayout = viewportWidth <= 900 || isTouchDevice;
         const desktopSidePanelWidth = 240;
         const horizontalPadding = isMobileLayout ? 10 : 80;
-        const chromeSafetyMargin = isMobileLayout ? 46 : 0;
-        const mobileBottomReserve = isMobileLayout ? Math.max(28, Math.round(viewportHeight * 0.09)) : 0;
+        const chromeSafetyMargin = isMobileLayout ? 16 : 0;
+        const mobileBottomReserve = isMobileLayout ? 10 : 0;
 
         let topUiHeight = 0;
         if (isMobileLayout && this.gameSection && !this.gameSection.classList.contains('hidden-view')) {
@@ -571,12 +571,12 @@ class Game {
                 140,
                 Math.min(
                     viewportHeight - verticalPadding - chromeSafetyMargin - mobileBottomReserve,
-                    Math.floor(viewportHeight * 0.72)
+                    Math.floor(viewportHeight * 0.9)
                 )
             )
             : viewportHeight - 120;
 
-        const scaleLimit = isMobileLayout ? 0.9 : 1.25;
+        const scaleLimit = isMobileLayout ? 1 : 1.25;
         const minScale = isMobileLayout ? 0.22 : 0.45;
         const scale = Math.max(
             minScale,
@@ -586,7 +586,7 @@ class Game {
             )
         );
 
-        const mobileScaleTuning = isMobileLayout ? 0.95 : 1;
+        const mobileScaleTuning = isMobileLayout ? 1 : 1;
         const tunedScale = scale * mobileScaleTuning;
         const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
         const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);
