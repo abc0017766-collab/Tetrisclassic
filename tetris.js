@@ -163,6 +163,10 @@ class Game {
         window.addEventListener('keyup', (e) => this.handleKeyUp(e));
         window.addEventListener('resize', () => this.resizeCanvases());
         window.addEventListener('orientationchange', () => this.resizeCanvases());
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => this.resizeCanvases());
+            window.visualViewport.addEventListener('scroll', () => this.resizeCanvases());
+        }
 
         this.bindSwipeControls();
         this.bindOverlayTouchStart();
@@ -257,12 +261,13 @@ class Game {
     showMainMenu() {
         this.mainMenu.classList.remove('hidden-view');
         this.gameSection.classList.add('hidden-view');
+        this.resizeCanvases();
     }
 
     showGameSection() {
         this.mainMenu.classList.add('hidden-view');
         this.gameSection.classList.remove('hidden-view');
-        this.resizeCanvases();
+        requestAnimationFrame(() => this.resizeCanvases());
     }
 
     startGame() {
@@ -486,28 +491,44 @@ class Game {
     }
 
     resizeCanvases() {
+        const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-        const isMobileLayout = window.innerWidth <= 768 || isTouchDevice;
+        const isMobileLayout = viewportWidth <= 900 || isTouchDevice;
         const desktopSidePanelWidth = 240;
-        const horizontalPadding = isMobileLayout ? 16 : 80;
-        const verticalPadding = isMobileLayout ? 150 : 120;
+        const horizontalPadding = isMobileLayout ? 10 : 80;
+
+        let topUiHeight = 0;
+        if (isMobileLayout && this.gameSection && !this.gameSection.classList.contains('hidden-view')) {
+            const mobileHud = this.gameSection.querySelector('.mobile-hud');
+            const gameActions = this.gameSection.querySelector('.game-actions');
+            const fxMessage = this.fxMessageEl;
+            topUiHeight =
+                (mobileHud ? mobileHud.offsetHeight : 0) +
+                (gameActions ? gameActions.offsetHeight : 0) +
+                (fxMessage ? fxMessage.offsetHeight : 0) +
+                18;
+        }
+
+        const verticalPadding = isMobileLayout ? topUiHeight : 120;
         const availableWidth = isMobileLayout
-            ? window.innerWidth - horizontalPadding
-            : window.innerWidth - horizontalPadding - desktopSidePanelWidth;
+            ? viewportWidth - horizontalPadding
+            : viewportWidth - horizontalPadding - desktopSidePanelWidth;
         const availableHeight = isMobileLayout
-            ? Math.max(340, window.innerHeight - verticalPadding)
-            : window.innerHeight - 120;
+            ? Math.max(180, viewportHeight - verticalPadding)
+            : viewportHeight - 120;
 
         const scaleLimit = isMobileLayout ? 1 : 1.25;
+        const minScale = isMobileLayout ? 0.22 : 0.45;
         const scale = Math.max(
-            0.45,
+            minScale,
             Math.min(
                 scaleLimit,
                 Math.min(availableWidth / this.baseCanvasWidth, availableHeight / this.baseCanvasHeight)
             )
         );
 
-        const mobileScaleTuning = isMobileLayout ? 0.93 : 1;
+        const mobileScaleTuning = isMobileLayout ? 0.98 : 1;
         const tunedScale = scale * mobileScaleTuning;
         const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
         const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);

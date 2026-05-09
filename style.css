@@ -18,6 +18,7 @@ body {
 
 .game-container {
     width: 100%;
+    max-width: 100vw;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -28,7 +29,7 @@ body {
 }
 
 .hidden-view {
-    display: none;
+    display: none !important;
 }
 
 .main-menu {
@@ -73,6 +74,8 @@ body {
     display: flex;
     gap: 30px;
     background-color: transparent;
+    width: 100%;
+    justify-content: center;
 }
 
 .mobile-hud {
@@ -142,6 +145,7 @@ body {
 #gameCanvas {
     width: 300px;
     height: 600px;
+    max-width: 100%;
     background-color: #08195d;
     border: 3px solid #4f7dff;
     box-shadow: 0 0 16px rgba(79, 125, 255, 0.8), inset 0 0 16px rgba(140, 170, 255, 0.2);
@@ -312,6 +316,7 @@ body {
     .game-container {
         justify-content: flex-start;
         padding: 6px;
+        width: 100vw;
     }
 
     .mobile-hud {
@@ -335,6 +340,7 @@ body {
         gap: 0;
         align-items: center;
         width: 100%;
+        justify-content: flex-start;
     }
 
     .side-panel {
