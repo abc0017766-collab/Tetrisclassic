@@ -987,33 +987,86 @@ class Game {
         if (ghost.y === piece.y) return;
 
         const shape = ghost.data.rotations[ghost.rotation];
-        this.ctx.save();
-        this.ctx.globalAlpha = 0.3;
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
                 if (!shape[y][x]) continue;
                 const gx = ghost.x + x;
                 const gy = ghost.y + y;
                 if (gy >= 0) {
-                    this.ctx.fillStyle = ghost.data.color;
-                    this.ctx.fillRect(gx * BLOCK_SIZE, gy * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    this.drawStyledBlock(this.ctx, gx * BLOCK_SIZE, gy * BLOCK_SIZE, BLOCK_SIZE, ghost.data.color, 0.32);
                 }
             }
         }
-        this.ctx.restore();
+    }
+
+    hexToRgb(hex) {
+        const normalized = String(hex || '').replace('#', '');
+        if (normalized.length !== 6) {
+            return { r: 255, g: 255, b: 255 };
+        }
+        return {
+            r: parseInt(normalized.slice(0, 2), 16),
+            g: parseInt(normalized.slice(2, 4), 16),
+            b: parseInt(normalized.slice(4, 6), 16)
+        };
+    }
+
+    clampColor(value) {
+        return Math.max(0, Math.min(255, Math.round(value)));
+    }
+
+    shiftColor(hex, amount) {
+        const rgb = this.hexToRgb(hex);
+        return `rgb(${this.clampColor(rgb.r + amount)}, ${this.clampColor(rgb.g + amount)}, ${this.clampColor(rgb.b + amount)})`;
+    }
+
+    drawStyledBlock(targetCtx, x, y, size, color, alpha = 1) {
+        const pad = 1;
+        const blockX = x + pad;
+        const blockY = y + pad;
+        const blockSize = Math.max(4, size - pad * 2);
+
+        targetCtx.save();
+        targetCtx.globalAlpha = alpha;
+
+        const fillGradient = targetCtx.createLinearGradient(blockX, blockY, blockX, blockY + blockSize);
+        fillGradient.addColorStop(0, this.shiftColor(color, 45));
+        fillGradient.addColorStop(0.42, color);
+        fillGradient.addColorStop(1, this.shiftColor(color, -55));
+        targetCtx.fillStyle = fillGradient;
+        targetCtx.fillRect(blockX, blockY, blockSize, blockSize);
+
+        // Top bevel highlight.
+        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+        targetCtx.fillRect(blockX + 1, blockY + 1, Math.max(1, blockSize - 2), Math.max(1, Math.floor(blockSize * 0.22)));
+
+        // Bottom shadow bevel.
+        targetCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        targetCtx.fillRect(
+            blockX + 1,
+            blockY + blockSize - Math.max(1, Math.floor(blockSize * 0.2)),
+            Math.max(1, blockSize - 2),
+            Math.max(1, Math.floor(blockSize * 0.2) - 1)
+        );
+
+        // Crisp inner border to separate each tile.
+        targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        targetCtx.lineWidth = 1;
+        targetCtx.strokeRect(blockX + 0.5, blockY + 0.5, blockSize - 1, blockSize - 1);
+
+        // Outer border for strong piece silhouette.
+        targetCtx.strokeStyle = this.shiftColor(color, -75);
+        targetCtx.lineWidth = 1;
+        targetCtx.strokeRect(blockX - 0.5, blockY - 0.5, blockSize + 1, blockSize + 1);
+
+        targetCtx.restore();
     }
 
     drawBoard() {
         for (let y = 0; y < BOARD_HEIGHT; y++) {
             for (let x = 0; x < BOARD_WIDTH; x++) {
                 if (this.board[y][x]) {
-                    this.ctx.fillStyle = this.board[y][x];
-                    this.ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-
-                    // Add glow effect
-                    this.ctx.strokeStyle = this.board[y][x];
-                    this.ctx.lineWidth = 2;
-                    this.ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    this.drawStyledBlock(this.ctx, x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, this.board[y][x]);
                 }
             }
 
@@ -1052,16 +1105,7 @@ class Game {
                 const boardY = piece.y + y;
 
                 if (boardY >= 0) {
-                    this.ctx.fillStyle = piece.data.color;
-                    this.ctx.fillRect(boardX * BLOCK_SIZE, boardY * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-
-                    // Add glow
-                    this.ctx.shadowColor = piece.data.color;
-                    this.ctx.shadowBlur = 10;
-                    this.ctx.strokeStyle = piece.data.color;
-                    this.ctx.lineWidth = 2;
-                    this.ctx.strokeRect(boardX * BLOCK_SIZE, boardY * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-                    this.ctx.shadowBlur = 0;
+                    this.drawStyledBlock(this.ctx, boardX * BLOCK_SIZE, boardY * BLOCK_SIZE, BLOCK_SIZE, piece.data.color);
                 }
             }
         }
@@ -1098,11 +1142,7 @@ class Game {
                 targetCtx.fillStyle = piece.data.color;
                 const drawX = offsetX + x * blockSize;
                 const drawY = offsetY + y * blockSize;
-                targetCtx.fillRect(drawX, drawY, blockSize - 1, blockSize - 1);
-
-                targetCtx.strokeStyle = piece.data.color;
-                targetCtx.lineWidth = 1;
-                targetCtx.strokeRect(drawX, drawY, blockSize - 1, blockSize - 1);
+                this.drawStyledBlock(targetCtx, drawX, drawY, blockSize, piece.data.color);
             }
         }
     }
