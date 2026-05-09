@@ -358,32 +358,42 @@ class Game {
         }
     }
 
+    setVisibleSection(viewName) {
+        const isMenu = viewName === 'menu';
+        const isCompetition = viewName === 'competition';
+        const isGame = viewName === 'game';
+
+        document.body.classList.toggle('in-game', isGame);
+
+        if (this.mainMenu) {
+            this.mainMenu.hidden = !isMenu;
+            this.mainMenu.classList.toggle('hidden-view', !isMenu);
+            this.mainMenu.style.display = isMenu ? 'flex' : 'none';
+        }
+
+        if (this.competitionSection) {
+            this.competitionSection.hidden = !isCompetition;
+            this.competitionSection.classList.toggle('hidden-view', !isCompetition);
+            this.competitionSection.style.display = isCompetition ? 'flex' : 'none';
+        }
+
+        if (this.gameSection) {
+            this.gameSection.hidden = !isGame;
+            this.gameSection.classList.toggle('hidden-view', !isGame);
+            this.gameSection.style.display = isGame ? 'flex' : 'none';
+        }
+
+        window.scrollTo(0, 0);
+    }
+
     showMainMenu() {
-        document.body.classList.remove('in-game');
-        this.mainMenu.hidden = false;
-        this.competitionSection.hidden = true;
-        this.gameSection.hidden = true;
-        this.mainMenu.classList.remove('hidden-view');
-        this.competitionSection.classList.add('hidden-view');
-        this.gameSection.classList.add('hidden-view');
-        this.mainMenu.style.display = 'flex';
-        this.competitionSection.style.display = 'none';
-        this.gameSection.style.display = 'none';
+        this.setVisibleSection('menu');
         this.lastEntryView = 'menu';
         this.resizeCanvases();
     }
 
     showCompetitionSection() {
-        document.body.classList.remove('in-game');
-        this.mainMenu.hidden = true;
-        this.competitionSection.hidden = false;
-        this.gameSection.hidden = true;
-        this.mainMenu.classList.add('hidden-view');
-        this.competitionSection.classList.remove('hidden-view');
-        this.gameSection.classList.add('hidden-view');
-        this.mainMenu.style.display = 'none';
-        this.competitionSection.style.display = 'flex';
-        this.gameSection.style.display = 'none';
+        this.setVisibleSection('competition');
         this.lastEntryView = 'competition';
         this.renderCompetitionBoards();
         if (this.competitionNameInput) {
@@ -393,13 +403,7 @@ class Game {
     }
 
     showGameSection() {
-        document.body.classList.add('in-game');
-        this.mainMenu.hidden = true;
-        this.gameSection.hidden = false;
-        this.mainMenu.classList.add('hidden-view');
-        this.gameSection.classList.remove('hidden-view');
-        this.mainMenu.style.display = 'none';
-        this.gameSection.style.display = 'flex';
+        this.setVisibleSection('game');
         requestAnimationFrame(() => this.resizeCanvases());
     }
 
@@ -414,6 +418,9 @@ class Game {
     startCompetitionGame() {
         const rawName = this.competitionNameInput ? this.competitionNameInput.value : '';
         const sanitized = (rawName || '').trim().replace(/\s+/g, ' ');
+        if (this.competitionNameInput) {
+            this.competitionNameInput.blur();
+        }
         this.currentPlayerName = sanitized || 'PLAYER';
         this.competitionMode = true;
         this.lastEntryView = 'competition';
