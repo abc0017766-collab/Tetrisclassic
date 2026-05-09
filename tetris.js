@@ -1206,6 +1206,8 @@ class Game {
                 const rowsToRemove = Array.from(this.clearingRows).sort((a, b) => b - a);
                 for (const row of rowsToRemove) {
                     this.board.splice(row, 1);
+                }
+                for (let i = 0; i < rowsToRemove.length; i++) {
                     this.board.unshift(new Array(BOARD_WIDTH).fill(null));
                 }
                 this.clearingRows.clear();
