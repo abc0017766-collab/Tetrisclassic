@@ -148,6 +148,23 @@ body.in-game #mainMenu {
     color: #f3f7ff;
 }
 
+.hud-card-split {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+}
+
+.hud-split-box {
+    border: 1px solid rgba(120, 163, 255, 0.7);
+    background: rgba(15, 44, 130, 0.55);
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .hud-card-target .hud-value {
     font-size: 8px;
     line-height: 1.25;
@@ -378,9 +395,23 @@ body.in-game #mainMenu {
         font-size: 7px;
     }
 
+    .mobile-hud .hud-card-split {
+        gap: 3px;
+        padding: 3px;
+    }
+
+    .mobile-hud .hud-card-split .hud-label {
+        font-size: 5px;
+        margin-bottom: 1px;
+    }
+
+    .mobile-hud .hud-card-split .hud-value {
+        font-size: 8px;
+    }
+
     .game-actions {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         align-items: stretch;
         width: min(560px, 100%);
         gap: 4px;
