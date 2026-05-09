@@ -9,6 +9,7 @@ const BLOCK_SIZE = 30;
 const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
+const FAST_DROP_STEPS = 2;
 
 // Piece Colors (RGB values)
 const PIECE_COLORS = {
@@ -955,7 +956,7 @@ class Game {
 
         // Drag-down fast fall affects only the current piece.
         if (this.fastDropActive && this.currentPiece) {
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < FAST_DROP_STEPS; i++) {
                 if (!this.softDrop(this.currentPiece)) {
                     this.placePiece(this.currentPiece);
                     this.spawnNewPiece();
