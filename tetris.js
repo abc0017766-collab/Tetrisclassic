@@ -10,29 +10,29 @@ const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
 const FAST_DROP_STEPS = 2;
-const BGM_BEAT_SECONDS = 0.18;
+const BGM_BEAT_SECONDS = 0.34;
 
-// Original chiptune loop (generated with Web Audio, no external asset).
+// Relaxed ambient loop (generated with Web Audio, no external asset).
 const BGM_MELODY = [
-    659.25, 493.88, 523.25, 587.33,
-    523.25, 493.88, 440.0, 440.0,
-    523.25, 659.25, 587.33, 523.25,
-    493.88, 523.25, 587.33, 659.25,
-    523.25, 440.0, 440.0, 0,
-    587.33, 698.46, 880.0, 783.99,
-    698.46, 659.25, 523.25, 659.25,
-    587.33, 523.25, 493.88, 0
+    440.0, 493.88, 523.25, 587.33,
+    523.25, 493.88, 440.0, 392.0,
+    349.23, 392.0, 440.0, 493.88,
+    440.0, 392.0, 349.23, 0,
+    392.0, 440.0, 493.88, 523.25,
+    493.88, 440.0, 392.0, 349.23,
+    329.63, 349.23, 392.0, 440.0,
+    392.0, 349.23, 329.63, 0
 ];
 
 const BGM_BASS = [
-    164.81, 0, 164.81, 0,
-    130.81, 0, 130.81, 0,
-    146.83, 0, 146.83, 0,
-    123.47, 0, 123.47, 0,
-    164.81, 0, 164.81, 0,
-    174.61, 0, 174.61, 0,
-    146.83, 0, 146.83, 0,
-    130.81, 0, 130.81, 0
+    110.0, 0, 110.0, 0,
+    98.0, 0, 98.0, 0,
+    87.31, 0, 87.31, 0,
+    82.41, 0, 82.41, 0,
+    98.0, 0, 98.0, 0,
+    110.0, 0, 110.0, 0,
+    87.31, 0, 87.31, 0,
+    73.42, 0, 73.42, 0
 ];
 
 // Piece Colors (RGB values)
@@ -397,10 +397,10 @@ class Game {
             const bassFreq = BGM_BASS[step % BGM_BASS.length];
 
             if (melodyFreq > 0) {
-                this.playTone(melodyFreq, BGM_BEAT_SECONDS * 0.95, 'square', 0.022, 0);
+                this.playTone(melodyFreq, BGM_BEAT_SECONDS * 0.92, 'sine', 0.014, 0);
             }
             if (bassFreq > 0) {
-                this.playTone(bassFreq, BGM_BEAT_SECONDS * 0.92, 'triangle', 0.015, 0);
+                this.playTone(bassFreq, BGM_BEAT_SECONDS * 0.9, 'triangle', 0.01, 0);
             }
 
             this.bgmStep++;
