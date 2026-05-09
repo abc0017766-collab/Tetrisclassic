@@ -267,6 +267,9 @@ class Game {
     }
 
     showMainMenu() {
+        document.body.classList.remove('in-game');
+        this.mainMenu.hidden = false;
+        this.gameSection.hidden = true;
         this.mainMenu.classList.remove('hidden-view');
         this.gameSection.classList.add('hidden-view');
         this.mainMenu.style.display = 'flex';
@@ -275,6 +278,9 @@ class Game {
     }
 
     showGameSection() {
+        document.body.classList.add('in-game');
+        this.mainMenu.hidden = true;
+        this.gameSection.hidden = false;
         this.mainMenu.classList.add('hidden-view');
         this.gameSection.classList.remove('hidden-view');
         this.mainMenu.style.display = 'none';

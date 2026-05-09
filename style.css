@@ -39,6 +39,12 @@ body {
     display: none !important;
 }
 
+body.in-game #mainMenu {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 .main-menu {
     width: var(--app-vw);
     min-height: var(--app-vh);
