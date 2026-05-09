@@ -10,6 +10,30 @@ const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
 const FAST_DROP_STEPS = 2;
+const BGM_BEAT_SECONDS = 0.18;
+
+// Original chiptune loop (generated with Web Audio, no external asset).
+const BGM_MELODY = [
+    659.25, 493.88, 523.25, 587.33,
+    523.25, 493.88, 440.0, 440.0,
+    523.25, 659.25, 587.33, 523.25,
+    493.88, 523.25, 587.33, 659.25,
+    523.25, 440.0, 440.0, 0,
+    587.33, 698.46, 880.0, 783.99,
+    698.46, 659.25, 523.25, 659.25,
+    587.33, 523.25, 493.88, 0
+];
+
+const BGM_BASS = [
+    164.81, 0, 164.81, 0,
+    130.81, 0, 130.81, 0,
+    146.83, 0, 146.83, 0,
+    123.47, 0, 123.47, 0,
+    164.81, 0, 164.81, 0,
+    174.61, 0, 174.61, 0,
+    146.83, 0, 146.83, 0,
+    130.81, 0, 130.81, 0
+];
 
 // Piece Colors (RGB values)
 const PIECE_COLORS = {
@@ -119,6 +143,8 @@ class Game {
         this.soundEnabled = true;
         this.shadowEnabled = true;
         this.audioCtx = null;
+        this.bgmIntervalId = null;
+        this.bgmStep = 0;
         this.fxTimeout = null;
         this.baseCanvasWidth = BOARD_WIDTH * BLOCK_SIZE;
         this.baseCanvasHeight = BOARD_HEIGHT * BLOCK_SIZE;
@@ -271,6 +297,7 @@ class Game {
                     this.ensureAudioReady();
                     this.playSfx('rotate');
                 }
+                this.updateBackgroundMusicState();
             });
         }
 
@@ -311,6 +338,7 @@ class Game {
         this.ensureAudioReady();
         this.showGameSection();
         this.init();
+        this.updateBackgroundMusicState();
         this.playSfx('start');
     }
 
@@ -327,6 +355,7 @@ class Game {
             this.pauseBtn.textContent = 'PAUSE';
         }
         this.showFxMessage('', '#00ffcc', 0);
+        this.updateBackgroundMusicState();
         this.showMainMenu();
     }
 
@@ -340,6 +369,62 @@ class Game {
         if (this.audioCtx.state === 'suspended') {
             this.audioCtx.resume();
         }
+    }
+
+    playTone(freq, duration, type = 'square', gain = 0.03, when = 0) {
+        if (!this.audioCtx || this.audioCtx.state !== 'running' || !freq) return;
+        const now = this.audioCtx.currentTime;
+        const osc = this.audioCtx.createOscillator();
+        const g = this.audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now + when);
+        g.gain.setValueAtTime(gain, now + when);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + when + duration);
+        osc.connect(g);
+        g.connect(this.audioCtx.destination);
+        osc.start(now + when);
+        osc.stop(now + when + duration);
+    }
+
+    startBackgroundMusic() {
+        if (this.bgmIntervalId) return;
+        const tick = () => {
+            if (!this.soundEnabled || !this.gameActive || this.gamePaused) return;
+            if (!this.audioCtx || this.audioCtx.state !== 'running') return;
+
+            const step = this.bgmStep % BGM_MELODY.length;
+            const melodyFreq = BGM_MELODY[step];
+            const bassFreq = BGM_BASS[step % BGM_BASS.length];
+
+            if (melodyFreq > 0) {
+                this.playTone(melodyFreq, BGM_BEAT_SECONDS * 0.95, 'square', 0.022, 0);
+            }
+            if (bassFreq > 0) {
+                this.playTone(bassFreq, BGM_BEAT_SECONDS * 0.92, 'triangle', 0.015, 0);
+            }
+
+            this.bgmStep++;
+        };
+
+        tick();
+        this.bgmIntervalId = setInterval(tick, BGM_BEAT_SECONDS * 1000);
+    }
+
+    stopBackgroundMusic() {
+        if (this.bgmIntervalId) {
+            clearInterval(this.bgmIntervalId);
+            this.bgmIntervalId = null;
+        }
+    }
+
+    updateBackgroundMusicState() {
+        const shouldPlay = this.soundEnabled && this.gameActive && !this.gamePaused;
+        if (!shouldPlay) {
+            this.stopBackgroundMusic();
+            return;
+        }
+        this.ensureAudioReady();
+        this.startBackgroundMusic();
     }
 
     playSfx(kind) {
@@ -914,11 +999,14 @@ class Game {
                 this.pauseBtn.textContent = 'PAUSE';
             }
         }
+
+        this.updateBackgroundMusicState();
     }
 
     gameOver() {
         this.gameActive = false;
         this.fastDropActive = false;
+        this.updateBackgroundMusicState();
         this.playSfx('gameover');
         this.showFxMessage('GAME OVER', '#ff3366', 900);
         document.getElementById('finalScore').textContent = this.score;
