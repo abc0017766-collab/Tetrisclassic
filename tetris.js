@@ -171,10 +171,18 @@ class Game {
         this.bindSwipeControls();
         this.bindOverlayTouchStart();
         this.bindMainControls();
+        this.updateViewportCssVars();
 
         // Show menu first; do not auto-start game.
         this.showMainMenu();
         this.resizeCanvases();
+    }
+
+    updateViewportCssVars() {
+        const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        document.documentElement.style.setProperty('--app-vw', `${Math.round(viewportWidth)}px`);
+        document.documentElement.style.setProperty('--app-vh', `${Math.round(viewportHeight)}px`);
     }
 
     createBoard() {
@@ -261,12 +269,16 @@ class Game {
     showMainMenu() {
         this.mainMenu.classList.remove('hidden-view');
         this.gameSection.classList.add('hidden-view');
+        this.mainMenu.style.display = 'flex';
+        this.gameSection.style.display = 'none';
         this.resizeCanvases();
     }
 
     showGameSection() {
         this.mainMenu.classList.add('hidden-view');
         this.gameSection.classList.remove('hidden-view');
+        this.mainMenu.style.display = 'none';
+        this.gameSection.style.display = 'flex';
         requestAnimationFrame(() => this.resizeCanvases());
     }
 
@@ -491,6 +503,7 @@ class Game {
     }
 
     resizeCanvases() {
+        this.updateViewportCssVars();
         const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
