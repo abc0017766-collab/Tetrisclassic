@@ -105,6 +105,9 @@ class Game {
         this.clearingRows = new Set(); // Rows being cleared
         this.clearAnimationFrame = 0; // Animation frame counter
         this.clearAnimationDuration = 8; // Frames for flash effect
+        this.baseCanvasWidth = BOARD_WIDTH * BLOCK_SIZE;
+        this.baseCanvasHeight = BOARD_HEIGHT * BLOCK_SIZE;
+        this.loopStarted = false;
 
         // Input tracking
         this.keys = {};
@@ -124,9 +127,15 @@ class Game {
         // Bind input handlers
         window.addEventListener('keydown', (e) => this.handleKeyDown(e));
         window.addEventListener('keyup', (e) => this.handleKeyUp(e));
+        window.addEventListener('resize', () => this.resizeCanvases());
+        window.addEventListener('orientationchange', () => this.resizeCanvases());
+
+        this.bindTouchControls();
+        this.bindOverlayTouchStart();
 
         // Initialize game
         this.init();
+        this.resizeCanvases();
     }
 
     createBoard() {
@@ -148,6 +157,9 @@ class Game {
         this.gameActive = true;
         this.gamePaused = false;
         this.dropCounter = 0;
+        this.movementCounter = 0;
+        this.clearingRows.clear();
+        this.clearAnimationFrame = 0;
 
         this.startOverlay.classList.add('hidden');
         this.gameOverOverlay.classList.add('hidden');
@@ -156,7 +168,118 @@ class Game {
         this.nextPiece = this.createRandomPiece();
         this.spawnNewPiece();
         this.updateUI();
-        this.gameLoop();
+
+        if (!this.loopStarted) {
+            this.loopStarted = true;
+            this.gameLoop();
+        }
+    }
+
+    bindOverlayTouchStart() {
+        this.startOverlay.addEventListener('click', () => {
+            if (!this.gameActive) {
+                this.init();
+            }
+        });
+
+        this.gameOverOverlay.addEventListener('click', () => {
+            if (!this.gameActive) {
+                this.init();
+            }
+        });
+
+        this.pauseOverlay.addEventListener('click', () => {
+            if (this.gamePaused) {
+                this.togglePause();
+            }
+        });
+    }
+
+    bindTouchControls() {
+        const mobileControls = document.getElementById('mobileControls');
+        if (!mobileControls) return;
+
+        const holdActionKeys = {
+            left: 'arrowleft',
+            right: 'arrowright',
+            down: 'arrowdown'
+        };
+
+        const stopHold = (action) => {
+            const key = holdActionKeys[action];
+            if (!key) return;
+            this.keys[key] = false;
+        };
+
+        mobileControls.querySelectorAll('[data-action]').forEach((btn) => {
+            const action = btn.getAttribute('data-action');
+
+            btn.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+
+                if (!this.gameActive || this.gamePaused) {
+                    if (action === 'pause' && this.gamePaused) {
+                        this.togglePause();
+                    }
+                    return;
+                }
+
+                if (action === 'left') {
+                    this.keys.arrowleft = true;
+                    this.moveLeft(this.currentPiece);
+                    this.movementCounter = 0;
+                } else if (action === 'right') {
+                    this.keys.arrowright = true;
+                    this.moveRight(this.currentPiece);
+                    this.movementCounter = 0;
+                } else if (action === 'down') {
+                    this.keys.arrowdown = true;
+                    this.softDrop(this.currentPiece);
+                    this.movementCounter = 0;
+                } else if (action === 'rotate') {
+                    this.rotate(this.currentPiece);
+                } else if (action === 'hardDrop') {
+                    this.hardDrop(this.currentPiece);
+                } else if (action === 'pause') {
+                    this.togglePause();
+                }
+            });
+
+            btn.addEventListener('pointerup', () => stopHold(action));
+            btn.addEventListener('pointercancel', () => stopHold(action));
+            btn.addEventListener('pointerleave', () => stopHold(action));
+        });
+    }
+
+    resizeCanvases() {
+        const isMobileLayout = window.innerWidth <= 768;
+        const desktopSidePanelWidth = 240;
+        const horizontalPadding = isMobileLayout ? 24 : 80;
+        const availableWidth = isMobileLayout
+            ? window.innerWidth - horizontalPadding
+            : window.innerWidth - horizontalPadding - desktopSidePanelWidth;
+        const availableHeight = isMobileLayout
+            ? Math.max(220, window.innerHeight * 0.5)
+            : window.innerHeight - 120;
+
+        const scale = Math.max(
+            0.45,
+            Math.min(
+                1.25,
+                Math.min(availableWidth / this.baseCanvasWidth, availableHeight / this.baseCanvasHeight)
+            )
+        );
+
+        const scaledWidth = Math.round(this.baseCanvasWidth * scale);
+        const scaledHeight = Math.round(this.baseCanvasHeight * scale);
+
+        this.canvas.style.width = `${scaledWidth}px`;
+        this.canvas.style.height = `${scaledHeight}px`;
+
+        const nextBase = 120;
+        const nextScale = isMobileLayout ? 0.85 : 1;
+        this.nextCanvas.style.width = `${Math.round(nextBase * nextScale)}px`;
+        this.nextCanvas.style.height = `${Math.round(nextBase * nextScale)}px`;
     }
 
     createRandomPiece() {
@@ -268,7 +391,6 @@ class Game {
 
     clearLines() {
         let linesCleared = 0;
-        const rowsToClear = [];
 
         for (let y = BOARD_HEIGHT - 1; y >= 0; y--) {
             let isLineFull = true;
@@ -280,7 +402,6 @@ class Game {
             }
 
             if (isLineFull) {
-                rowsToClear.push(y);
                 this.clearingRows.add(y);
                 linesCleared++;
             }
