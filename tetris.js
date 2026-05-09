@@ -104,6 +104,7 @@ class Game {
         this.canHold = true;
         this.ghostPiece = null;
         this.dropCounter = 0;
+        this.fastDropActive = false;
         this.frameCounter = 0;
         this.movementCounter = 0;
         this.clearingRows = new Set(); // Rows being cleared
@@ -202,6 +203,7 @@ class Game {
         this.gameActive = true;
         this.gamePaused = false;
         this.dropCounter = 0;
+        this.fastDropActive = false;
         this.movementCounter = 0;
         this.clearingRows.clear();
         this.clearAnimationFrame = 0;
@@ -295,6 +297,7 @@ class Game {
     endToMainMenu() {
         this.gameActive = false;
         this.gamePaused = false;
+        this.fastDropActive = false;
         this.keys = {};
         this.lastKeyPress = {};
         this.gameOverOverlay.classList.add('hidden');
@@ -399,6 +402,19 @@ class Game {
             this.swipeState.startY = y;
             this.swipeState.startTime = performance.now();
             this.swipeState.pointerId = pointerId;
+            this.fastDropActive = false;
+        };
+
+        const updateSwipeMove = (x, y) => {
+            if (!this.swipeState.tracking || !this.gameActive || this.gamePaused || !this.currentPiece) {
+                this.fastDropActive = false;
+                return;
+            }
+
+            const dx = x - this.swipeState.startX;
+            const dy = y - this.swipeState.startY;
+            const slideDownThreshold = Math.max(14, Math.round(this.canvas.clientHeight * 0.03));
+            this.fastDropActive = dy > slideDownThreshold && Math.abs(dy) > Math.abs(dx);
         };
 
         const endSwipe = (x, y) => {
@@ -449,6 +465,7 @@ class Game {
             if (!this.swipeState.tracking) return;
             if (event.pointerId !== this.swipeState.pointerId) return;
             if (event.pointerType !== 'touch') return;
+            updateSwipeMove(event.clientX, event.clientY);
             event.preventDefault();
         }, { passive: false });
 
@@ -456,11 +473,13 @@ class Game {
             if (event.pointerType !== 'touch') return;
             if (event.pointerId !== this.swipeState.pointerId) return;
             endSwipe(event.clientX, event.clientY);
+            this.fastDropActive = false;
         }, { passive: true });
 
         this.canvas.addEventListener('pointercancel', () => {
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
+            this.fastDropActive = false;
         }, { passive: true });
 
         // Touch fallback for browsers that do not dispatch pointer events consistently.
@@ -472,6 +491,10 @@ class Game {
 
         this.canvas.addEventListener('touchmove', (event) => {
             if (!this.swipeState.tracking) return;
+            const touch = event.touches[0];
+            if (touch) {
+                updateSwipeMove(touch.clientX, touch.clientY);
+            }
             event.preventDefault();
         }, { passive: false });
 
@@ -479,11 +502,13 @@ class Game {
             if (!this.swipeState.tracking) return;
             const touch = event.changedTouches[0];
             endSwipe(touch.clientX, touch.clientY);
+            this.fastDropActive = false;
         }, { passive: false });
 
         this.canvas.addEventListener('touchcancel', () => {
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
+            this.fastDropActive = false;
         }, { passive: true });
     }
 
@@ -843,6 +868,7 @@ class Game {
         this.gamePaused = !this.gamePaused;
 
         if (this.gamePaused) {
+            this.fastDropActive = false;
             this.pauseOverlay.classList.remove('hidden');
             this.playSfx('pause');
             if (this.pauseBtn) {
@@ -859,6 +885,7 @@ class Game {
 
     gameOver() {
         this.gameActive = false;
+        this.fastDropActive = false;
         this.playSfx('gameover');
         this.showFxMessage('GAME OVER', '#ff3366', 900);
         document.getElementById('finalScore').textContent = this.score;
@@ -888,7 +915,8 @@ class Game {
 
         // Gravity
         const gravity = GRAVITY_BASE + (this.level - 1) * 0.003;
-        this.dropCounter += gravity;
+        const gravityMultiplier = this.fastDropActive ? 6 : 1;
+        this.dropCounter += gravity * gravityMultiplier;
 
         if (this.dropCounter >= 1) {
             if (!this.softDrop(this.currentPiece)) {
