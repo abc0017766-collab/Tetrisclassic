@@ -268,12 +268,13 @@ body {
     .game-actions {
         width: 100%;
         justify-content: center;
+        gap: 6px;
     }
 
     .action-btn {
-        font-size: 10px;
-        min-width: 82px;
-        padding: 10px 12px;
+        font-size: 8px;
+        min-width: 72px;
+        padding: 8px 8px;
     }
 
     .game-content {

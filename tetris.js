@@ -485,8 +485,8 @@ class Game {
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
         const isMobileLayout = window.innerWidth <= 768 || isTouchDevice;
         const desktopSidePanelWidth = 240;
-        const horizontalPadding = isMobileLayout ? 12 : 80;
-        const verticalPadding = isMobileLayout ? 8 : 120;
+        const horizontalPadding = isMobileLayout ? 16 : 80;
+        const verticalPadding = isMobileLayout ? 150 : 120;
         const availableWidth = isMobileLayout
             ? window.innerWidth - horizontalPadding
             : window.innerWidth - horizontalPadding - desktopSidePanelWidth;
@@ -494,7 +494,7 @@ class Game {
             ? Math.max(340, window.innerHeight - verticalPadding)
             : window.innerHeight - 120;
 
-        const scaleLimit = isMobileLayout ? 2 : 1.25;
+        const scaleLimit = isMobileLayout ? 1 : 1.25;
         const scale = Math.max(
             0.45,
             Math.min(
@@ -503,8 +503,10 @@ class Game {
             )
         );
 
-        const scaledWidth = Math.round(this.baseCanvasWidth * scale);
-        const scaledHeight = Math.round(this.baseCanvasHeight * scale);
+        const mobileScaleTuning = isMobileLayout ? 0.93 : 1;
+        const tunedScale = scale * mobileScaleTuning;
+        const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
+        const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);
 
         this.canvas.style.width = `${scaledWidth}px`;
         this.canvas.style.height = `${scaledHeight}px`;
