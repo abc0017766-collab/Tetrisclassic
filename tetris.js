@@ -10,7 +10,7 @@ const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
 const FAST_DROP_STEPS = 2;
-const LOCK_DELAY_MS = 300;
+const LOCK_DELAY_MS = 800;
 const BGM_BEAT_SECONDS = 0.34;
 
 // Relaxed ambient loop (generated with Web Audio, no external asset).
