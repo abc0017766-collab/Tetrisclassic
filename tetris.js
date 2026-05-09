@@ -6,8 +6,8 @@
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
 const BLOCK_SIZE = 30;
-const GRAVITY_BASE = 0.02; // Base gravity speed (lower = slower)
-const MOVEMENT_DELAY = 2; // Frames between left/right/down movements
+const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
+const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
 
 // Piece Colors (RGB values)
@@ -414,11 +414,11 @@ class Game {
             const absY = Math.abs(dy);
             const elapsed = performance.now() - this.swipeState.startTime;
 
-            const swipeThreshold = Math.max(10, Math.round(this.canvas.clientWidth * 0.03));
-            const tapThreshold = Math.max(12, Math.round(this.canvas.clientWidth * 0.025));
+            const swipeThreshold = Math.max(24, Math.round(this.canvas.clientWidth * 0.08));
+            const tapThreshold = Math.max(22, Math.round(this.canvas.clientWidth * 0.06));
 
             // Single tap to rotate.
-            if (absX < tapThreshold && absY < tapThreshold && elapsed < 280) {
+            if (absX < tapThreshold && absY < tapThreshold && elapsed < 360) {
                 if (this.rotate(this.currentPiece)) {
                     this.playSfx('rotate');
                 }
@@ -468,7 +468,7 @@ class Game {
             if (event.touches.length !== 1) return;
             const touch = event.touches[0];
             startSwipe(touch.clientX, touch.clientY, null);
-        }, { passive: true });
+        }, { passive: false });
 
         this.canvas.addEventListener('touchmove', (event) => {
             if (!this.swipeState.tracking) return;
@@ -479,7 +479,7 @@ class Game {
             if (!this.swipeState.tracking) return;
             const touch = event.changedTouches[0];
             endSwipe(touch.clientX, touch.clientY);
-        }, { passive: true });
+        }, { passive: false });
 
         this.canvas.addEventListener('touchcancel', () => {
             this.swipeState.tracking = false;
@@ -887,7 +887,7 @@ class Game {
         }
 
         // Gravity
-        const gravity = GRAVITY_BASE + (this.level - 1) * 0.01;
+        const gravity = GRAVITY_BASE + (this.level - 1) * 0.003;
         this.dropCounter += gravity;
 
         if (this.dropCounter >= 1) {
