@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Classic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-content">
+            <!-- Canvas for game board -->
+            <canvas id="gameCanvas" width="300" height="600"></canvas>
+
+            <!-- Side Panel -->
+            <div class="side-panel">
+                <div class="panel-section">
+                    <div class="panel-label">SCORE</div>
+                    <div class="panel-value" id="scoreDisplay">0</div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-label">LEVEL</div>
+                    <div class="panel-value" id="levelDisplay">1</div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-label">LINES</div>
+                    <div class="panel-value" id="linesDisplay">0</div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-label">NEXT</div>
+                    <canvas id="nextCanvas" width="120" height="120"></canvas>
+                </div>
+
+                <div class="controls-info">
+                    <p>← → Move</p>
+                    <p>↑ Rotate</p>
+                    <p>↓ Soft Drop</p>
+                    <p>SPACE Hard Drop</p>
+                    <p>P Pause</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen Overlay -->
+    <div id="startOverlay" class="overlay">
+        <div class="overlay-content">
+            <h1 class="game-title">TETRIS</h1>
+            <p class="overlay-text">CLASSIC</p>
+            <p class="start-prompt">PRESS ENTER TO START</p>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="gameOverOverlay" class="overlay hidden">
+        <div class="overlay-content">
+            <h1 class="game-over-title">GAME OVER</h1>
+            <p class="final-score">SCORE: <span id="finalScore">0</span></p>
+            <p class="final-level">LEVEL: <span id="finalLevel">1</span></p>
+            <p class="final-lines">LINES: <span id="finalLines">0</span></p>
+            <p class="start-prompt">PRESS ENTER TO RESTART</p>
+        </div>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="pauseOverlay" class="overlay hidden">
+        <div class="overlay-content">
+            <h1 class="pause-title">PAUSED</h1>
+            <p class="start-prompt">PRESS P TO RESUME</p>
+        </div>
+    </div>
+
+    <script src="tetris.js"></script>
+</body>
+</html>
