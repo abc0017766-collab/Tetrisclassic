@@ -138,6 +138,9 @@ class Game {
         // Get canvas contexts
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
+        // Keep internal canvas resolution aligned with board dimensions.
+        this.canvas.width = this.baseCanvasWidth;
+        this.canvas.height = this.baseCanvasHeight;
         this.nextCanvas = document.getElementById('nextCanvas');
         this.nextCtx = this.nextCanvas.getContext('2d');
         this.mobileNextCanvas = document.getElementById('mobileNextCanvas');
@@ -541,6 +544,10 @@ class Game {
 
     resizeCanvases() {
         this.updateViewportCssVars();
+        if (this.canvas.width !== this.baseCanvasWidth || this.canvas.height !== this.baseCanvasHeight) {
+            this.canvas.width = this.baseCanvasWidth;
+            this.canvas.height = this.baseCanvasHeight;
+        }
         const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
