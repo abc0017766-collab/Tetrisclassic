@@ -77,10 +77,33 @@ body.in-game #mainMenu {
 .game-actions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .action-btn {
     min-width: 120px;
+}
+
+.action-score {
+    min-width: 72px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+}
+
+.action-score-label {
+    font-size: 6px;
+    letter-spacing: 1px;
+    color: #b5ceff;
+}
+
+.action-score-value {
+    font-size: 10px;
+    color: #f3f7ff;
 }
 
 .game-content {
@@ -94,7 +117,7 @@ body.in-game #mainMenu {
 .mobile-hud {
     display: none;
     width: min(560px, 100%);
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     margin-bottom: 4px;
 }
@@ -365,6 +388,20 @@ body.in-game #mainMenu {
         font-size: 8px;
         min-width: 72px;
         padding: 8px 8px;
+    }
+
+    .action-score {
+        min-width: 72px;
+        padding: 8px 8px;
+    }
+
+    .action-score-label {
+        font-size: 5px;
+        margin-bottom: 0;
+    }
+
+    .action-score-value {
+        font-size: 9px;
     }
 
     .game-content {
