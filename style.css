@@ -351,18 +351,18 @@ body.in-game #mainMenu {
 
     .game-container {
         justify-content: flex-start;
-        padding: 6px;
+        padding: 4px;
         width: 100vw;
     }
 
     .mobile-hud {
         display: grid;
-        gap: 4px;
+        gap: 3px;
     }
 
     .mobile-hud .hud-card {
-        min-height: 42px;
-        padding: 4px;
+        min-height: 40px;
+        padding: 3px;
     }
 
     .mobile-hud .hud-label {
@@ -383,20 +383,20 @@ body.in-game #mainMenu {
         grid-template-columns: repeat(5, minmax(0, 1fr));
         align-items: stretch;
         width: min(560px, 100%);
-        gap: 6px;
+        gap: 4px;
     }
 
     .action-btn {
         font-size: 8px;
         min-width: 0;
         width: 100%;
-        padding: 8px 8px;
+        padding: 7px 6px;
     }
 
     .action-score {
         min-width: 0;
         width: 100%;
-        padding: 8px 8px;
+        padding: 7px 6px;
     }
 
     .action-score-label {

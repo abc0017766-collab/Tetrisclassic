@@ -558,7 +558,7 @@ class Game {
                 (mobileHud ? mobileHud.offsetHeight : 0) +
                 (gameActions ? gameActions.offsetHeight : 0) +
                 (fxMessage ? fxMessage.offsetHeight : 0) +
-                18;
+                10;
         }
 
         const verticalPadding = isMobileLayout ? topUiHeight : 120;
@@ -579,7 +579,7 @@ class Game {
             )
         );
 
-        const mobileScaleTuning = isMobileLayout ? 0.97 : 1;
+        const mobileScaleTuning = isMobileLayout ? 1 : 1;
         const tunedScale = scale * mobileScaleTuning;
         const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
         const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);
