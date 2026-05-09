@@ -1247,7 +1247,11 @@ class Game {
     }
 }
 
-// Initialize the game when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize correctly for both static and dynamic script loading.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        new Game();
+    });
+} else {
     new Game();
-});
+}
