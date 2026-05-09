@@ -579,7 +579,7 @@ class Game {
             )
         );
 
-        const mobileScaleTuning = isMobileLayout ? 1 : 1;
+        const mobileScaleTuning = isMobileLayout ? 0.93 : 1;
         const tunedScale = scale * mobileScaleTuning;
         const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
         const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);

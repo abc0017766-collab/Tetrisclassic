@@ -398,15 +398,16 @@ body.in-game #mainMenu {
     .mobile-hud .hud-card-split {
         gap: 3px;
         padding: 3px;
+        min-height: 46px;
     }
 
     .mobile-hud .hud-card-split .hud-label {
-        font-size: 5px;
+        font-size: 6px;
         margin-bottom: 1px;
     }
 
     .mobile-hud .hud-card-split .hud-value {
-        font-size: 8px;
+        font-size: 9px;
     }
 
     .game-actions {
