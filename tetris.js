@@ -546,9 +546,7 @@ class Game {
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
         const isMobileLayout = viewportWidth <= 900 || isTouchDevice;
         const desktopSidePanelWidth = 240;
-        const horizontalPadding = isMobileLayout ? 10 : 80;
-        const chromeSafetyMargin = isMobileLayout ? 16 : 0;
-        const mobileBottomReserve = isMobileLayout ? 10 : 0;
+        const horizontalPadding = isMobileLayout ? 8 : 80;
 
         let topUiHeight = 0;
         if (isMobileLayout && this.gameSection && !this.gameSection.classList.contains('hidden-view')) {
@@ -558,36 +556,27 @@ class Game {
             topUiHeight =
                 (mobileHud ? mobileHud.offsetHeight : 0) +
                 (gameActions ? gameActions.offsetHeight : 0) +
-                (fxMessage ? fxMessage.offsetHeight : 0) +
+                (fxMessage && fxMessage.classList.contains('active') ? fxMessage.offsetHeight : 0) +
                 10;
         }
 
-        const verticalPadding = isMobileLayout ? topUiHeight : 120;
+        const verticalPadding = isMobileLayout ? topUiHeight + 12 : 120;
         const availableWidth = isMobileLayout
             ? viewportWidth - horizontalPadding
             : viewportWidth - horizontalPadding - desktopSidePanelWidth;
         const availableHeight = isMobileLayout
-            ? Math.max(
-                140,
-                Math.min(
-                    viewportHeight - verticalPadding - chromeSafetyMargin - mobileBottomReserve,
-                    Math.floor(viewportHeight * 0.9)
-                )
-            )
+            ? Math.max(120, viewportHeight - verticalPadding)
             : viewportHeight - 120;
 
         const scaleLimit = isMobileLayout ? 1 : 1.25;
-        const minScale = isMobileLayout ? 0.22 : 0.45;
-        const scale = Math.max(
+        const minScale = isMobileLayout ? 0.2 : 0.45;
+        const tunedScale = Math.max(
             minScale,
             Math.min(
                 scaleLimit,
                 Math.min(availableWidth / this.baseCanvasWidth, availableHeight / this.baseCanvasHeight)
             )
         );
-
-        const mobileScaleTuning = isMobileLayout ? 1 : 1;
-        const tunedScale = scale * mobileScaleTuning;
         const scaledWidth = Math.round(this.baseCanvasWidth * tunedScale);
         const scaledHeight = Math.round(this.baseCanvasHeight * tunedScale);
 

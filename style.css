@@ -448,6 +448,10 @@ body.in-game #mainMenu {
         justify-content: flex-start;
     }
 
+    #gameCanvas {
+        margin-top: -18px;
+    }
+
     .side-panel {
         display: none;
     }
@@ -499,5 +503,6 @@ body.in-game #mainMenu {
 
     #gameCanvas {
         border-width: 2px;
+        margin-top: -18px;
     }
 }
