@@ -449,7 +449,7 @@ body.in-game #mainMenu {
     }
 
     #gameCanvas {
-        margin-top: -18px;
+        margin-top: -30px;
     }
 
     .side-panel {
@@ -503,6 +503,6 @@ body.in-game #mainMenu {
 
     #gameCanvas {
         border-width: 2px;
-        margin-top: -18px;
+        margin-top: -30px;
     }
 }

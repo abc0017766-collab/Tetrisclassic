@@ -547,6 +547,7 @@ class Game {
         const isMobileLayout = viewportWidth <= 900 || isTouchDevice;
         const desktopSidePanelWidth = 240;
         const horizontalPadding = isMobileLayout ? 8 : 80;
+        const mobileBottomReserve = isMobileLayout ? Math.max(44, Math.round(viewportHeight * 0.08)) : 0;
 
         let topUiHeight = 0;
         if (isMobileLayout && this.gameSection && !this.gameSection.classList.contains('hidden-view')) {
@@ -565,7 +566,7 @@ class Game {
             ? viewportWidth - horizontalPadding
             : viewportWidth - horizontalPadding - desktopSidePanelWidth;
         const availableHeight = isMobileLayout
-            ? Math.max(120, viewportHeight - verticalPadding)
+            ? Math.max(120, viewportHeight - verticalPadding - mobileBottomReserve)
             : viewportHeight - 120;
 
         const scaleLimit = isMobileLayout ? 1 : 1.25;
