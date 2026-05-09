@@ -75,6 +75,20 @@ body {
     background-color: #0a0e27;
 }
 
+.fx-message {
+    min-height: 24px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #00ffcc;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.9);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.fx-message.active {
+    opacity: 1;
+}
+
 /* Canvas Styling */
 #gameCanvas {
     width: 300px;
@@ -119,6 +133,16 @@ body {
 }
 
 #nextCanvas {
+    width: 100%;
+    background-color: #000000;
+    border: 2px solid #00ff00;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+#holdCanvas {
     width: 100%;
     background-color: #000000;
     border: 2px solid #00ff00;
@@ -248,7 +272,7 @@ body {
 
     .action-btn {
         font-size: 10px;
-        min-width: 100px;
+        min-width: 82px;
         padding: 10px 12px;
     }
 

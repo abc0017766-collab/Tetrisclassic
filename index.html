@@ -17,8 +17,12 @@
     <div id="gameSection" class="game-container hidden-view">
         <div class="game-actions">
             <button id="pauseBtn" class="action-btn" type="button">PAUSE</button>
+            <button id="holdBtn" class="action-btn" type="button">HOLD</button>
+            <button id="soundBtn" class="action-btn" type="button">SOUND ON</button>
             <button id="endBtn" class="action-btn" type="button">END</button>
         </div>
+
+        <div id="fxMessage" class="fx-message"></div>
 
         <div class="game-content">
             <!-- Canvas for game board -->
@@ -46,11 +50,17 @@
                     <canvas id="nextCanvas" width="120" height="120"></canvas>
                 </div>
 
+                <div class="panel-section">
+                    <div class="panel-label">HOLD</div>
+                    <canvas id="holdCanvas" width="120" height="120"></canvas>
+                </div>
+
                 <div class="controls-info">
                     <p>← → Move</p>
                     <p>↑ Rotate</p>
                     <p>↓ Soft Drop</p>
                     <p>SPACE Hard Drop</p>
+                    <p>C Hold</p>
                     <p>P Pause</p>
                     <p>Mobile: Swipe ← → ↓</p>
                     <p>Mobile: Double Tap to Rotate</p>
