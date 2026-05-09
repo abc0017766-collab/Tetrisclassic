@@ -10,6 +10,7 @@ const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
 const FAST_DROP_STEPS = 2;
+const LOCK_DELAY_MS = 300;
 const BGM_BEAT_SECONDS = 0.34;
 
 // Relaxed ambient loop (generated with Web Audio, no external asset).
@@ -129,6 +130,8 @@ class Game {
         this.canHold = true;
         this.ghostPiece = null;
         this.dropCounter = 0;
+        this.lockDelayActive = false;
+        this.lockDelayStart = 0;
         this.fastDropActive = false;
         this.fastDropDisabledForPiece = false;
         this.frameCounter = 0;
@@ -237,6 +240,8 @@ class Game {
         this.gameActive = true;
         this.gamePaused = false;
         this.dropCounter = 0;
+        this.lockDelayActive = false;
+        this.lockDelayStart = 0;
         this.fastDropActive = false;
         this.fastDropDisabledForPiece = false;
         this.movementCounter = 0;
@@ -722,6 +727,8 @@ class Game {
         this.currentPiece = this.nextPiece;
         this.nextPiece = this.createRandomPiece();
         this.canHold = true;
+        this.lockDelayActive = false;
+        this.lockDelayStart = 0;
         this.fastDropActive = false;
         this.fastDropDisabledForPiece = true;
 
@@ -795,6 +802,7 @@ class Game {
             piece.rotation = oldRotation;
             return false;
         }
+        this.refreshLockDelayFromAction(piece);
         return true;
     }
 
@@ -804,6 +812,7 @@ class Game {
             piece.x++;
             return false;
         }
+        this.refreshLockDelayFromAction(piece);
         return true;
     }
 
@@ -813,6 +822,7 @@ class Game {
             piece.x--;
             return false;
         }
+        this.refreshLockDelayFromAction(piece);
         return true;
     }
 
@@ -822,7 +832,27 @@ class Game {
             piece.y--;
             return false;
         }
+        if (piece === this.currentPiece) {
+            this.lockDelayActive = false;
+            this.lockDelayStart = 0;
+        }
         return true;
+    }
+
+    isPieceGrounded(piece) {
+        if (!piece) return false;
+        piece.y++;
+        const grounded = this.collides(piece);
+        piece.y--;
+        return grounded;
+    }
+
+    refreshLockDelayFromAction(piece) {
+        if (piece !== this.currentPiece) return;
+        if (this.isPieceGrounded(piece)) {
+            this.lockDelayActive = true;
+            this.lockDelayStart = performance.now();
+        }
     }
 
     hardDrop(piece) {
@@ -1034,14 +1064,28 @@ class Game {
             return;
         }
 
+        const now = performance.now();
+        if (this.currentPiece && this.isPieceGrounded(this.currentPiece)) {
+            if (!this.lockDelayActive) {
+                this.lockDelayActive = true;
+                this.lockDelayStart = now;
+            } else if (now - this.lockDelayStart >= LOCK_DELAY_MS) {
+                this.placePiece(this.currentPiece);
+                this.spawnNewPiece();
+                return;
+            }
+        }
+
         // Gravity
         const gravity = GRAVITY_BASE + (this.level - 1) * 0.01;
         this.dropCounter += gravity;
 
         if (this.dropCounter >= 1) {
             if (!this.softDrop(this.currentPiece)) {
-                this.placePiece(this.currentPiece);
-                this.spawnNewPiece();
+                if (!this.lockDelayActive) {
+                    this.lockDelayActive = true;
+                    this.lockDelayStart = now;
+                }
             }
             this.dropCounter = 0;
         }
@@ -1050,9 +1094,11 @@ class Game {
         if (this.fastDropActive && this.currentPiece) {
             for (let i = 0; i < FAST_DROP_STEPS; i++) {
                 if (!this.softDrop(this.currentPiece)) {
-                    this.placePiece(this.currentPiece);
-                    this.spawnNewPiece();
-                    return;
+                    if (!this.lockDelayActive) {
+                        this.lockDelayActive = true;
+                        this.lockDelayStart = now;
+                    }
+                    break;
                 }
             }
         }
