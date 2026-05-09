@@ -116,6 +116,7 @@ class Game {
         this.combo = -1;
         this.backToBack = false;
         this.soundEnabled = true;
+        this.shadowEnabled = true;
         this.audioCtx = null;
         this.fxTimeout = null;
         this.baseCanvasWidth = BOARD_WIDTH * BLOCK_SIZE;
@@ -153,6 +154,7 @@ class Game {
         this.gameSection = document.getElementById('gameSection');
         this.startGameBtn = document.getElementById('startGameBtn');
         this.pauseBtn = document.getElementById('pauseBtn');
+        this.shadowBtn = document.getElementById('shadowBtn');
         this.holdBtn = document.getElementById('holdBtn');
         this.soundBtn = document.getElementById('soundBtn');
         this.endBtn = document.getElementById('endBtn');
@@ -170,6 +172,7 @@ class Game {
         this.bindSwipeControls();
         this.bindOverlayTouchStart();
         this.bindMainControls();
+        this.updateShadowButtonLabel();
         this.updateViewportCssVars();
 
         // Show menu first; do not auto-start game.
@@ -222,6 +225,7 @@ class Game {
         if (this.pauseBtn) {
             this.pauseBtn.textContent = 'PAUSE';
         }
+        this.updateShadowButtonLabel();
 
         this.nextPiece = this.createRandomPiece();
         this.spawnNewPiece();
@@ -247,6 +251,14 @@ class Game {
             });
         }
 
+        if (this.shadowBtn) {
+            this.shadowBtn.addEventListener('click', () => {
+                this.shadowEnabled = !this.shadowEnabled;
+                this.updateShadowButtonLabel();
+                this.playSfx('rotate');
+            });
+        }
+
         if (this.soundBtn) {
             this.soundBtn.addEventListener('click', () => {
                 this.soundEnabled = !this.soundEnabled;
@@ -260,6 +272,12 @@ class Game {
 
         if (this.endBtn) {
             this.endBtn.addEventListener('click', () => this.endToMainMenu());
+        }
+    }
+
+    updateShadowButtonLabel() {
+        if (this.shadowBtn) {
+            this.shadowBtn.textContent = this.shadowEnabled ? 'SHADOW ON' : 'SHADOW OFF';
         }
     }
 
@@ -978,7 +996,7 @@ class Game {
         this.drawBoard();
 
         // Draw ghost piece
-        if (this.gameActive && this.currentPiece) {
+        if (this.gameActive && this.currentPiece && this.shadowEnabled) {
             this.drawGhostPiece(this.currentPiece);
         }
 
