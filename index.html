@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tetris Classic</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <script>
+        (function loadLatestStylesheet() {
+            const cacheKey = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            window.__assetCacheKey = cacheKey;
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `style.css?cb=${cacheKey}`;
+            document.head.appendChild(link);
+        })();
+    </script>
 </head>
 <body>
     <div id="mainMenu" class="main-menu">
@@ -117,7 +126,8 @@
         // Force fresh game logic on each load to avoid stale mobile cache.
         (function loadLatestGameScript() {
             const script = document.createElement('script');
-            script.src = `tetris.js?cb=${Date.now()}`;
+            const cacheKey = window.__assetCacheKey || Date.now();
+            script.src = `tetris.js?cb=${cacheKey}`;
             document.body.appendChild(script);
         })();
     </script>
