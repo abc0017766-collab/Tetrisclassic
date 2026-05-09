@@ -1367,28 +1367,39 @@ class Game {
         targetCtx.save();
         targetCtx.globalAlpha = alpha;
 
-        // Main tile fill with gentle top-to-bottom ramp.
-        const fillGradient = targetCtx.createLinearGradient(blockX, blockY, blockX, blockY + blockSize);
-        fillGradient.addColorStop(0, this.shiftColor(color, 24));
+        // Main tile fill with diagonal ramp to feel more volumetric.
+        const fillGradient = targetCtx.createLinearGradient(blockX, blockY, blockX + blockSize, blockY + blockSize);
+        fillGradient.addColorStop(0, this.shiftColor(color, 34));
         fillGradient.addColorStop(0.55, color);
-        fillGradient.addColorStop(1, this.shiftColor(color, -30));
+        fillGradient.addColorStop(1, this.shiftColor(color, -36));
         targetCtx.fillStyle = fillGradient;
         targetCtx.fillRect(blockX, blockY, blockSize, blockSize);
 
-        // Pixel-style highlight on top and left edges.
-        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.32)';
-        targetCtx.fillRect(blockX + 1, blockY + 1, Math.max(1, blockSize - 2), 2);
+        // Top cap highlight.
+        const capHeight = Math.max(2, Math.floor(blockSize * 0.18));
+        const capGradient = targetCtx.createLinearGradient(blockX, blockY, blockX, blockY + capHeight + 2);
+        capGradient.addColorStop(0, 'rgba(255, 255, 255, 0.42)');
+        capGradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+        targetCtx.fillStyle = capGradient;
+        targetCtx.fillRect(blockX + 1, blockY + 1, Math.max(1, blockSize - 2), capHeight);
+
+        // Left bevel highlight and right shadow to create raised edges.
+        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.24)';
         targetCtx.fillRect(blockX + 1, blockY + 1, 2, Math.max(1, blockSize - 2));
 
-        // Bottom and right shadow for depth.
-        targetCtx.fillStyle = 'rgba(0, 0, 0, 0.24)';
+        targetCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        targetCtx.fillRect(blockX + blockSize - 3, blockY + 1, 2, Math.max(1, blockSize - 2));
         targetCtx.fillRect(
             blockX + 1,
-            blockY + blockSize - 2,
+            blockY + blockSize - 3,
             Math.max(1, blockSize - 1),
             2
         );
-        targetCtx.fillRect(blockX + blockSize - 2, blockY + 1, 2, Math.max(1, blockSize - 1));
+
+        // Inner vignette keeps each cube readable on bright boards.
+        targetCtx.strokeStyle = 'rgba(10, 24, 84, 0.28)';
+        targetCtx.lineWidth = 1;
+        targetCtx.strokeRect(blockX + 1.5, blockY + 1.5, blockSize - 3, blockSize - 3);
 
         // Strong border so each cell stays visually distinct.
         targetCtx.strokeStyle = 'rgba(7, 20, 80, 0.95)';
@@ -1512,16 +1523,50 @@ class Game {
     }
 
     drawPlayfieldBackground() {
-        this.ctx.fillStyle = '#0b257e';
+        const baseGradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+        baseGradient.addColorStop(0, '#1a45b6');
+        baseGradient.addColorStop(0.52, '#0c2b88');
+        baseGradient.addColorStop(1, '#081f67');
+        this.ctx.fillStyle = baseGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const highlightGradient = this.ctx.createRadialGradient(
+            this.canvas.width * 0.25,
+            this.canvas.height * 0.12,
+            10,
+            this.canvas.width * 0.25,
+            this.canvas.height * 0.12,
+            this.canvas.height * 0.75
+        );
+        highlightGradient.addColorStop(0, 'rgba(178, 214, 255, 0.22)');
+        highlightGradient.addColorStop(1, 'rgba(178, 214, 255, 0)');
+        this.ctx.fillStyle = highlightGradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         for (let y = 0; y < BOARD_HEIGHT; y++) {
             for (let x = 0; x < BOARD_WIDTH; x++) {
                 const evenCell = (x + y) % 2 === 0;
-                this.ctx.fillStyle = evenCell ? 'rgba(255, 255, 255, 0.035)' : 'rgba(255, 255, 255, 0.015)';
+                this.ctx.fillStyle = evenCell ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 10, 40, 0.05)';
                 this.ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+
+                // Cell-level bevel hint for a subtle recessed playfield texture.
+                this.ctx.strokeStyle = 'rgba(173, 207, 255, 0.04)';
+                this.ctx.strokeRect(x * BLOCK_SIZE + 0.5, y * BLOCK_SIZE + 0.5, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
             }
         }
+
+        const vignette = this.ctx.createRadialGradient(
+            this.canvas.width * 0.5,
+            this.canvas.height * 0.55,
+            this.canvas.width * 0.35,
+            this.canvas.width * 0.5,
+            this.canvas.height * 0.55,
+            this.canvas.width * 0.86
+        );
+        vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vignette.addColorStop(1, 'rgba(0, 8, 40, 0.34)');
+        this.ctx.fillStyle = vignette;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     gameLoop() {
