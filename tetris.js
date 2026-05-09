@@ -9,6 +9,7 @@ const BLOCK_SIZE = 30;
 const GRAVITY_BASE = 0.01; // Base gravity speed (lower = slower)
 const MOVEMENT_DELAY = 5; // Frames between left/right/down movements
 const HARD_DROP_BONUS = 2;
+const FAST_DROP_STEPS = 5;
 
 // Piece Colors (RGB values)
 const PIECE_COLORS = {
@@ -915,8 +916,7 @@ class Game {
 
         // Gravity
         const gravity = GRAVITY_BASE + (this.level - 1) * 0.003;
-        const gravityMultiplier = this.fastDropActive ? 6 : 1;
-        this.dropCounter += gravity * gravityMultiplier;
+        this.dropCounter += gravity;
 
         if (this.dropCounter >= 1) {
             if (!this.softDrop(this.currentPiece)) {
@@ -924,6 +924,17 @@ class Game {
                 this.spawnNewPiece();
             }
             this.dropCounter = 0;
+        }
+
+        // Drag-down fast fall: attempt multiple down steps each frame.
+        if (this.fastDropActive && this.currentPiece) {
+            for (let i = 0; i < FAST_DROP_STEPS; i++) {
+                if (!this.softDrop(this.currentPiece)) {
+                    this.placePiece(this.currentPiece);
+                    this.spawnNewPiece();
+                    break;
+                }
+            }
         }
 
         // Continuous movement (held keys) with delay
