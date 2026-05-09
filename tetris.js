@@ -130,9 +130,15 @@ class Game {
         this.nextCtx = this.nextCanvas.getContext('2d');
 
         // Initialize overlays
-        this.startOverlay = document.getElementById('startOverlay');
         this.gameOverOverlay = document.getElementById('gameOverOverlay');
         this.pauseOverlay = document.getElementById('pauseOverlay');
+
+        // Main menu and game controls
+        this.mainMenu = document.getElementById('mainMenu');
+        this.gameSection = document.getElementById('gameSection');
+        this.startGameBtn = document.getElementById('startGameBtn');
+        this.pauseBtn = document.getElementById('pauseBtn');
+        this.endBtn = document.getElementById('endBtn');
 
         // Bind input handlers
         window.addEventListener('keydown', (e) => this.handleKeyDown(e));
@@ -142,9 +148,10 @@ class Game {
 
         this.bindSwipeControls();
         this.bindOverlayTouchStart();
+        this.bindMainControls();
 
-        // Initialize game
-        this.init();
+        // Show menu first; do not auto-start game.
+        this.showMainMenu();
         this.resizeCanvases();
     }
 
@@ -171,9 +178,12 @@ class Game {
         this.clearingRows.clear();
         this.clearAnimationFrame = 0;
 
-        this.startOverlay.classList.add('hidden');
         this.gameOverOverlay.classList.add('hidden');
         this.pauseOverlay.classList.add('hidden');
+
+        if (this.pauseBtn) {
+            this.pauseBtn.textContent = 'PAUSE';
+        }
 
         this.nextPiece = this.createRandomPiece();
         this.spawnNewPiece();
@@ -185,16 +195,57 @@ class Game {
         }
     }
 
-    bindOverlayTouchStart() {
-        this.startOverlay.addEventListener('click', () => {
-            if (!this.gameActive) {
-                this.init();
-            }
-        });
+    bindMainControls() {
+        if (this.startGameBtn) {
+            this.startGameBtn.addEventListener('click', () => this.startGame());
+        }
 
+        if (this.pauseBtn) {
+            this.pauseBtn.addEventListener('click', () => {
+                if (this.gameActive) {
+                    this.togglePause();
+                }
+            });
+        }
+
+        if (this.endBtn) {
+            this.endBtn.addEventListener('click', () => this.endToMainMenu());
+        }
+    }
+
+    showMainMenu() {
+        this.mainMenu.classList.remove('hidden-view');
+        this.gameSection.classList.add('hidden-view');
+    }
+
+    showGameSection() {
+        this.mainMenu.classList.add('hidden-view');
+        this.gameSection.classList.remove('hidden-view');
+        this.resizeCanvases();
+    }
+
+    startGame() {
+        this.showGameSection();
+        this.init();
+    }
+
+    endToMainMenu() {
+        this.gameActive = false;
+        this.gamePaused = false;
+        this.keys = {};
+        this.lastKeyPress = {};
+        this.gameOverOverlay.classList.add('hidden');
+        this.pauseOverlay.classList.add('hidden');
+        if (this.pauseBtn) {
+            this.pauseBtn.textContent = 'PAUSE';
+        }
+        this.showMainMenu();
+    }
+
+    bindOverlayTouchStart() {
         this.gameOverOverlay.addEventListener('click', () => {
             if (!this.gameActive) {
-                this.init();
+                this.startGame();
             }
         });
 
@@ -521,7 +572,7 @@ class Game {
 
             if (!this.gameActive) {
                 if (event.key === 'Enter') {
-                    this.init();
+                    this.startGame();
                 }
             } else if (this.gamePaused) {
                 if (key === 'p') {
@@ -553,8 +604,14 @@ class Game {
 
         if (this.gamePaused) {
             this.pauseOverlay.classList.remove('hidden');
+            if (this.pauseBtn) {
+                this.pauseBtn.textContent = 'RESUME';
+            }
         } else {
             this.pauseOverlay.classList.add('hidden');
+            if (this.pauseBtn) {
+                this.pauseBtn.textContent = 'PAUSE';
+            }
         }
     }
 

@@ -8,7 +8,18 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <div id="mainMenu" class="main-menu">
+        <h1 class="game-title">TETRIS</h1>
+        <p class="overlay-text">CLASSIC</p>
+        <button id="startGameBtn" class="menu-btn" type="button">START GAME</button>
+    </div>
+
+    <div id="gameSection" class="game-container hidden-view">
+        <div class="game-actions">
+            <button id="pauseBtn" class="action-btn" type="button">PAUSE</button>
+            <button id="endBtn" class="action-btn" type="button">END</button>
+        </div>
+
         <div class="game-content">
             <!-- Canvas for game board -->
             <canvas id="gameCanvas" width="300" height="600"></canvas>
@@ -45,15 +56,6 @@
                     <p>Mobile: Double Tap to Rotate</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Start Screen Overlay -->
-    <div id="startOverlay" class="overlay">
-        <div class="overlay-content">
-            <h1 class="game-title">TETRIS</h1>
-            <p class="overlay-text">CLASSIC</p>
-            <p class="start-prompt">PRESS ENTER OR TAP TO START</p>
         </div>
     </div>
 
