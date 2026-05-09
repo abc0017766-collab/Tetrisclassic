@@ -108,6 +108,12 @@ class Game {
         this.baseCanvasWidth = BOARD_WIDTH * BLOCK_SIZE;
         this.baseCanvasHeight = BOARD_HEIGHT * BLOCK_SIZE;
         this.loopStarted = false;
+        this.swipeState = {
+            tracking: false,
+            startX: 0,
+            startY: 0,
+            startTime: 0
+        };
 
         // Input tracking
         this.keys = {};
@@ -130,7 +136,7 @@ class Game {
         window.addEventListener('resize', () => this.resizeCanvases());
         window.addEventListener('orientationchange', () => this.resizeCanvases());
 
-        this.bindTouchControls();
+        this.bindSwipeControls();
         this.bindOverlayTouchStart();
 
         // Initialize game
@@ -195,60 +201,64 @@ class Game {
         });
     }
 
-    bindTouchControls() {
-        const mobileControls = document.getElementById('mobileControls');
-        if (!mobileControls) return;
+    bindSwipeControls() {
+        const startSwipe = (event) => {
+            if (event.touches.length !== 1) return;
 
-        const holdActionKeys = {
-            left: 'arrowleft',
-            right: 'arrowright',
-            down: 'arrowdown'
+            const touch = event.touches[0];
+            this.swipeState.tracking = true;
+            this.swipeState.startX = touch.clientX;
+            this.swipeState.startY = touch.clientY;
+            this.swipeState.startTime = performance.now();
         };
 
-        const stopHold = (action) => {
-            const key = holdActionKeys[action];
-            if (!key) return;
-            this.keys[key] = false;
+        const trackSwipe = (event) => {
+            if (!this.swipeState.tracking) return;
+            event.preventDefault();
         };
 
-        mobileControls.querySelectorAll('[data-action]').forEach((btn) => {
-            const action = btn.getAttribute('data-action');
+        const endSwipe = (event) => {
+            if (!this.swipeState.tracking) return;
+            this.swipeState.tracking = false;
 
-            btn.addEventListener('pointerdown', (event) => {
-                event.preventDefault();
+            if (!this.gameActive || this.gamePaused || !this.currentPiece) return;
 
-                if (!this.gameActive || this.gamePaused) {
-                    if (action === 'pause' && this.gamePaused) {
-                        this.togglePause();
+            const touch = event.changedTouches[0];
+            const dx = touch.clientX - this.swipeState.startX;
+            const dy = touch.clientY - this.swipeState.startY;
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+            const elapsed = performance.now() - this.swipeState.startTime;
+
+            const swipeThreshold = Math.max(18, Math.round(this.canvas.clientWidth * 0.05));
+            const tapThreshold = Math.max(10, Math.round(this.canvas.clientWidth * 0.02));
+
+            // Tap to rotate
+            if (absX < tapThreshold && absY < tapThreshold && elapsed < 280) {
+                this.rotate(this.currentPiece);
+                return;
+            }
+
+            // Swipe to move or soft drop
+            if (absX >= swipeThreshold || absY >= swipeThreshold) {
+                if (absX > absY) {
+                    if (dx > 0) {
+                        this.moveRight(this.currentPiece);
+                    } else {
+                        this.moveLeft(this.currentPiece);
                     }
-                    return;
-                }
-
-                if (action === 'left') {
-                    this.keys.arrowleft = true;
-                    this.moveLeft(this.currentPiece);
-                    this.movementCounter = 0;
-                } else if (action === 'right') {
-                    this.keys.arrowright = true;
-                    this.moveRight(this.currentPiece);
-                    this.movementCounter = 0;
-                } else if (action === 'down') {
-                    this.keys.arrowdown = true;
+                } else if (dy > 0) {
                     this.softDrop(this.currentPiece);
-                    this.movementCounter = 0;
-                } else if (action === 'rotate') {
-                    this.rotate(this.currentPiece);
-                } else if (action === 'hardDrop') {
-                    this.hardDrop(this.currentPiece);
-                } else if (action === 'pause') {
-                    this.togglePause();
                 }
-            });
+            }
+        };
 
-            btn.addEventListener('pointerup', () => stopHold(action));
-            btn.addEventListener('pointercancel', () => stopHold(action));
-            btn.addEventListener('pointerleave', () => stopHold(action));
-        });
+        this.canvas.addEventListener('touchstart', startSwipe, { passive: true });
+        this.canvas.addEventListener('touchmove', trackSwipe, { passive: false });
+        this.canvas.addEventListener('touchend', endSwipe, { passive: true });
+        this.canvas.addEventListener('touchcancel', () => {
+            this.swipeState.tracking = false;
+        }, { passive: true });
     }
 
     resizeCanvases() {

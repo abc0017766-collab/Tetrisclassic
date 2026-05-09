@@ -43,6 +43,7 @@ body {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    touch-action: none;
 }
 
 /* Side Panel */
@@ -94,41 +95,6 @@ body {
 
 .controls-info p {
     margin: 5px 0;
-}
-
-.mobile-controls {
-    display: none;
-    width: min(560px, 100%);
-    gap: 10px;
-}
-
-.touch-row {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.touch-btn {
-    border: 2px solid #00ff00;
-    background: rgba(0, 255, 0, 0.08);
-    color: #00ff00;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 10px;
-    min-height: 52px;
-    padding: 8px;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.35);
-}
-
-.touch-btn:active {
-    transform: scale(0.98);
-    background: rgba(0, 255, 0, 0.2);
-}
-
-.touch-btn-wide {
-    grid-column: span 1;
 }
 
 /* Overlays */
@@ -252,16 +218,9 @@ body {
     }
 
     .controls-info {
-        display: none;
-    }
-
-    .mobile-controls {
-        display: grid;
-    }
-
-    .touch-btn {
-        font-size: 9px;
-        min-height: 48px;
+        width: 100%;
+        font-size: 7px;
+        line-height: 1.6;
     }
 
     .game-title {
