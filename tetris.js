@@ -162,11 +162,9 @@ class Game {
             startX: 0,
             startY: 0,
             startTime: 0,
-            pointerId: null
-        };
-        this.clickState = {
-            lastClickTime: 0,
-            clickCount: 0
+            pointerId: null,
+            holdTimeoutId: null,
+            holdActivated: false
         };
 
         // Input tracking
@@ -222,7 +220,6 @@ class Game {
         }
 
         this.bindSwipeControls();
-        this.bindDoubleClickControls();
         this.bindOverlayTouchStart();
         this.bindMainControls();
         this.updateShadowButtonLabel();
@@ -667,6 +664,21 @@ class Game {
             this.swipeState.startY = y;
             this.swipeState.startTime = performance.now();
             this.swipeState.pointerId = pointerId;
+            this.swipeState.holdActivated = false;
+
+            // Set up 3-second hold timer to flip block
+            if (this.gameActive && !this.gamePaused && this.currentPiece) {
+                this.swipeState.holdTimeoutId = setTimeout(() => {
+                    if (this.swipeState.tracking && this.gameActive && !this.gamePaused && this.currentPiece) {
+                        this.swipeState.holdActivated = true;
+                        // Flip: rotate twice for 180 degrees
+                        this.rotate(this.currentPiece);
+                        this.rotate(this.currentPiece);
+                        this.playSfx('rotate');
+                        this.showFxMessage('FLIP', '#ffff00', 400);
+                    }
+                }, 3000);
+            }
         };
 
         const updateSwipeMove = (x, y) => {
@@ -677,6 +689,16 @@ class Game {
 
             const dx = x - this.swipeState.startX;
             const dy = y - this.swipeState.startY;
+            const movementThreshold = Math.max(20, Math.round(this.canvas.clientWidth * 0.06));
+
+            // Cancel hold if user moves finger significantly
+            if (!this.swipeState.holdActivated && (Math.abs(dx) > movementThreshold || Math.abs(dy) > movementThreshold)) {
+                if (this.swipeState.holdTimeoutId) {
+                    clearTimeout(this.swipeState.holdTimeoutId);
+                    this.swipeState.holdTimeoutId = null;
+                }
+            }
+
             const slideDownThreshold = Math.max(14, Math.round(this.canvas.clientHeight * 0.03));
             if (!this.fastDropDisabledForPiece && dy > slideDownThreshold && Math.abs(dy) > Math.abs(dx)) {
                 this.fastDropActive = true;
@@ -691,6 +713,18 @@ class Game {
             if (!this.swipeState.tracking) return;
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
+
+            // Cancel hold timer if still pending
+            if (this.swipeState.holdTimeoutId) {
+                clearTimeout(this.swipeState.holdTimeoutId);
+                this.swipeState.holdTimeoutId = null;
+            }
+
+            // If hold was already triggered, skip normal swipe logic
+            if (this.swipeState.holdActivated) {
+                this.swipeState.holdActivated = false;
+                return;
+            }
 
             if (!this.gameActive || this.gamePaused || !this.currentPiece) return;
 
@@ -753,6 +787,11 @@ class Game {
         this.canvas.addEventListener('pointercancel', () => {
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
+            this.swipeState.holdActivated = false;
+            if (this.swipeState.holdTimeoutId) {
+                clearTimeout(this.swipeState.holdTimeoutId);
+                this.swipeState.holdTimeoutId = null;
+            }
             this.fastDropDisabledForPiece = false;
         }, { passive: true });
 
@@ -782,31 +821,13 @@ class Game {
         this.canvas.addEventListener('touchcancel', () => {
             this.swipeState.tracking = false;
             this.swipeState.pointerId = null;
+            this.swipeState.holdActivated = false;
+            if (this.swipeState.holdTimeoutId) {
+                clearTimeout(this.swipeState.holdTimeoutId);
+                this.swipeState.holdTimeoutId = null;
+            }
             this.fastDropDisabledForPiece = false;
         }, { passive: true });
-    }
-
-    bindDoubleClickControls() {
-        const doubleClickThreshold = 320; // milliseconds
-
-        // Detect double-click and flip (rotate 180 degrees)
-        this.canvas.addEventListener('click', (event) => {
-            if (!this.gameActive || this.gamePaused || !this.currentPiece) return;
-
-            const now = performance.now();
-            const timeSinceLastClick = now - this.clickState.lastClickTime;
-
-            if (timeSinceLastClick < doubleClickThreshold) {
-                // Double-click detected: rotate twice for 180-degree flip
-                this.rotate(this.currentPiece);
-                this.rotate(this.currentPiece);
-                this.playSfx('rotate');
-                event.preventDefault();
-            }
-
-            this.clickState.lastClickTime = now;
-            this.clickState.clickCount = (timeSinceLastClick < doubleClickThreshold) ? 2 : 1;
-        });
     }
 
     resizeCanvases() {
