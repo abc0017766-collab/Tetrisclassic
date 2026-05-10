@@ -666,18 +666,27 @@ class Game {
             this.swipeState.pointerId = pointerId;
             this.swipeState.holdActivated = false;
 
-            // Set up 3-second hold timer to flip block
+            // Set up 2-second hold timer to flip block
             if (this.gameActive && !this.gamePaused && this.currentPiece) {
                 this.swipeState.holdTimeoutId = setTimeout(() => {
                     if (this.swipeState.tracking && this.gameActive && !this.gamePaused && this.currentPiece) {
                         this.swipeState.holdActivated = true;
-                        // Flip: rotate twice for 180 degrees
-                        this.rotate(this.currentPiece);
-                        this.rotate(this.currentPiece);
-                        this.playSfx('rotate');
-                        this.showFxMessage('FLIP', '#ffff00', 400);
+                        // Flip: rotate 180 degrees by advancing 2 rotations
+                        const oldRotation = this.currentPiece.rotation;
+                        this.currentPiece.rotation = (this.currentPiece.rotation + 2) % this.currentPiece.data.rotations.length;
+                        
+                        // Check for collision after 180-degree rotation
+                        if (this.collides(this.currentPiece)) {
+                            // Revert if collision
+                            this.currentPiece.rotation = oldRotation;
+                        } else {
+                            // Success: refresh lock delay and show feedback
+                            this.refreshLockDelayFromAction(this.currentPiece);
+                            this.playSfx('rotate');
+                            this.showFxMessage('FLIP', '#ffff00', 400);
+                        }
                     }
-                }, 3000);
+                }, 2000);
             }
         };
 
