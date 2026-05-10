@@ -559,22 +559,11 @@ body.in-game #mainMenu {
     .game-content {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0;
         align-items: center;
         justify-content: flex-start;
-        width: fit-content;
-        margin: 0 auto;
-        position: static;
-    }
-
-    .board-flip-btn {
-        position: static;
-        transform: none;
-        min-width: 72px;
-        padding: 7px 8px;
-        margin-left: 0;
-        z-index: 2;
-        align-self: flex-end;
+        width: 100%;
+        position: relative;
     }
 
     #gameCanvas {
@@ -648,25 +637,14 @@ body.in-game #mainMenu {
     }
 
     .game-content {
-        width: fit-content;
+        width: 100%;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 8px;
-        position: static;
-        margin: 0 auto;
-    }
-
-    .board-flip-btn {
-        position: static;
-        transform: none;
-        min-width: 72px;
-        padding: 7px 8px;
-        margin-left: 0;
-        z-index: 2;
-        align-self: flex-end;
+        gap: 0;
+        position: relative;
     }
 
     .side-panel {

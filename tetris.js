@@ -200,7 +200,6 @@ class Game {
         this.competitionNameInput = document.getElementById('competitionNameInput');
         this.pauseBtn = document.getElementById('pauseBtn');
         this.shadowBtn = document.getElementById('shadowBtn');
-        this.flipBtn = document.getElementById('flipBtn');
         this.holdBtn = document.getElementById('holdBtn');
         this.soundBtn = document.getElementById('soundBtn');
         this.endBtn = document.getElementById('endBtn');
@@ -335,14 +334,6 @@ class Game {
                 this.shadowEnabled = !this.shadowEnabled;
                 this.updateShadowButtonLabel();
                 this.playSfx('rotate');
-            });
-        }
-
-        if (this.flipBtn) {
-            this.flipBtn.addEventListener('click', () => {
-                if (this.gameActive && !this.gamePaused && this.currentPiece) {
-                    this.flipBlock();
-                }
             });
         }
 
@@ -754,6 +745,8 @@ class Game {
                     }
                 } else if (dy > 0) {
                     this.softDrop(this.currentPiece);
+                } else {
+                    this.flipBlock();
                 }
             }
         };
