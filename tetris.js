@@ -1290,15 +1290,15 @@ class Game {
                 this.placePiece(this.currentPiece);
                 this.spawnNewPiece();
                 return;
-            } else {
-                // Lock delay is active but not expired: don't apply gravity
-                return;
             }
         }
 
         // Smooth gravity: accumulate visual offset instead of discrete steps
-        const gravity = GRAVITY_BASE + (this.level - 1) * 0.01;
-        this.currentPiece.visualOffset += gravity;
+        // Skip gravity if lock delay is active (piece is waiting to lock)
+        if (!this.lockDelayActive) {
+            const gravity = GRAVITY_BASE + (this.level - 1) * 0.01;
+            this.currentPiece.visualOffset += gravity;
+        }
 
         // Move grid position when visual offset accumulates to a full block
         while (this.currentPiece.visualOffset >= 1) {
