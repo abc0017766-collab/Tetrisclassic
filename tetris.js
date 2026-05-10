@@ -200,6 +200,7 @@ class Game {
         this.competitionNameInput = document.getElementById('competitionNameInput');
         this.pauseBtn = document.getElementById('pauseBtn');
         this.shadowBtn = document.getElementById('shadowBtn');
+        this.flipBtn = document.getElementById('flipBtn');
         this.holdBtn = document.getElementById('holdBtn');
         this.soundBtn = document.getElementById('soundBtn');
         this.endBtn = document.getElementById('endBtn');
@@ -334,6 +335,14 @@ class Game {
                 this.shadowEnabled = !this.shadowEnabled;
                 this.updateShadowButtonLabel();
                 this.playSfx('rotate');
+            });
+        }
+
+        if (this.flipBtn) {
+            this.flipBtn.addEventListener('click', () => {
+                if (this.gameActive && !this.gamePaused && this.currentPiece) {
+                    this.flipBlock();
+                }
             });
         }
 
@@ -665,32 +674,6 @@ class Game {
             this.swipeState.startTime = performance.now();
             this.swipeState.pointerId = pointerId;
             this.swipeState.holdActivated = false;
-
-            // Set up 3-second hold timer to flip block
-            if (this.gameActive && !this.gamePaused && this.currentPiece) {
-                this.swipeState.holdTimeoutId = setTimeout(() => {
-                    if (this.swipeState.tracking && this.gameActive && !this.gamePaused && this.currentPiece && !this.swipeState.holdActivated) {
-                        this.swipeState.holdActivated = true;
-                        // Flip: toggle horizontal mirror (no rotation change)
-                        const oldFlipped = this.currentPiece.flipped;
-                        this.currentPiece.flipped = !this.currentPiece.flipped;
-                        
-                        // Check for collision after flip
-                        if (this.collides(this.currentPiece)) {
-                            // Revert if collision
-                            this.currentPiece.flipped = oldFlipped;
-                            this.swipeState.holdActivated = false;
-                        } else {
-                            // Success: refresh lock delay and show feedback
-                            this.refreshLockDelayFromAction(this.currentPiece);
-                            this.playSfx('rotate');
-                            this.showFxMessage('FLIP', '#ffff00', 400);
-                            // Clear timeout ID to prevent further flips
-                            this.swipeState.holdTimeoutId = null;
-                        }
-                    }
-                }, 3000);
-            }
         };
 
         const updateSwipeMove = (x, y) => {
@@ -1094,6 +1077,24 @@ class Game {
         }
         this.placePiece(piece);
         this.spawnNewPiece();
+    }
+
+    flipBlock() {
+        if (!this.currentPiece) return;
+        
+        const oldFlipped = this.currentPiece.flipped;
+        this.currentPiece.flipped = !this.currentPiece.flipped;
+        
+        // Check for collision after flip
+        if (this.collides(this.currentPiece)) {
+            // Revert if collision
+            this.currentPiece.flipped = oldFlipped;
+        } else {
+            // Success: refresh lock delay and show feedback
+            this.refreshLockDelayFromAction(this.currentPiece);
+            this.playSfx('rotate');
+            this.showFxMessage('FLIP', '#ffff00', 400);
+        }
     }
 
     placePiece(piece) {
