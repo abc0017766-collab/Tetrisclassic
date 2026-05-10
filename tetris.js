@@ -1071,6 +1071,7 @@ class Game {
         while (this.softDrop(piece)) {
             distance++;
         }
+        piece.visualOffset = 0;
         if (distance > 0) {
             this.score += distance * HARD_DROP_BONUS;
             this.shakeFrames = 4;
@@ -1081,6 +1082,7 @@ class Game {
     }
 
     placePiece(piece) {
+        piece.visualOffset = 0;
         this.moves++;
         const shape = piece.data.rotations[piece.rotation];
 
@@ -1283,6 +1285,7 @@ class Game {
             if (!this.lockDelayActive) {
                 this.lockDelayActive = true;
                 this.lockDelayStart = now;
+                this.currentPiece.visualOffset = 0;
             } else if (now - this.lockDelayStart >= LOCK_DELAY_MS) {
                 this.placePiece(this.currentPiece);
                 this.spawnNewPiece();
@@ -1297,6 +1300,8 @@ class Game {
         // Move grid position when visual offset accumulates to a full block
         while (this.currentPiece.visualOffset >= 1) {
             if (!this.softDrop(this.currentPiece)) {
+                // Collision detected: clamp visualOffset and activate lock delay
+                this.currentPiece.visualOffset = 0;
                 if (!this.lockDelayActive) {
                     this.lockDelayActive = true;
                     this.lockDelayStart = now;
@@ -1311,6 +1316,7 @@ class Game {
             this.currentPiece.visualOffset += FAST_DROP_STEPS * 0.25;
             while (this.currentPiece.visualOffset >= 1) {
                 if (!this.softDrop(this.currentPiece)) {
+                    this.currentPiece.visualOffset = 0;
                     if (!this.lockDelayActive) {
                         this.lockDelayActive = true;
                         this.lockDelayStart = now;
