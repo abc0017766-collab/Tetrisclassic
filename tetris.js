@@ -666,7 +666,7 @@ class Game {
             this.swipeState.pointerId = pointerId;
             this.swipeState.holdActivated = false;
 
-            // Set up 2-second hold timer to flip block
+            // Set up 3-second hold timer to flip block
             if (this.gameActive && !this.gamePaused && this.currentPiece) {
                 this.swipeState.holdTimeoutId = setTimeout(() => {
                     if (this.swipeState.tracking && this.gameActive && !this.gamePaused && this.currentPiece) {
@@ -686,7 +686,7 @@ class Game {
                             this.showFxMessage('FLIP', '#ffff00', 400);
                         }
                     }
-                }, 2000);
+                }, 3000);
             }
         };
 
