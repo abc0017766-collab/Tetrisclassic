@@ -1290,6 +1290,9 @@ class Game {
                 this.placePiece(this.currentPiece);
                 this.spawnNewPiece();
                 return;
+            } else {
+                // Lock delay is active but not expired: don't apply gravity
+                return;
             }
         }
 
@@ -1384,7 +1387,8 @@ class Game {
             x: piece.x,
             y: piece.y,
             rotation: piece.rotation,
-            data: piece.data
+            data: piece.data,
+            visualOffset: 0  // Ghost never uses animation offset
         };
 
         while (true) {
@@ -1398,7 +1402,7 @@ class Game {
         if (ghost.y === piece.y) return;
 
         const shape = ghost.data.rotations[ghost.rotation];
-        const visualY = ghost.y + (ghost.visualOffset || 0);
+        const visualY = ghost.y;  // Ghost renders at integer grid position
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
                 if (!shape[y][x]) continue;
