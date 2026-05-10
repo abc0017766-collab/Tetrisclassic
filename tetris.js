@@ -1093,7 +1093,7 @@ class Game {
     placePiece(piece) {
         piece.visualOffset = 0;
         this.moves++;
-        const shape = piece.data.rotations[piece.rotation];
+        const shape = this.getShapeForPiece(piece);
 
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
