@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +15,77 @@ const int fastDropSteps = 2;
 const int lockDelayMs = 800;
 const int clearAnimationDuration = 8;
 const String leaderboardStorageKey = 'tetrisCompetitionScoresV1';
+const double bgmBeatSeconds = 0.34;
+
+const List<double> bgmMelody = [
+  440.0,
+  493.88,
+  523.25,
+  587.33,
+  523.25,
+  493.88,
+  440.0,
+  392.0,
+  349.23,
+  392.0,
+  440.0,
+  493.88,
+  440.0,
+  392.0,
+  349.23,
+  0,
+  392.0,
+  440.0,
+  493.88,
+  523.25,
+  493.88,
+  440.0,
+  392.0,
+  349.23,
+  329.63,
+  349.23,
+  392.0,
+  440.0,
+  392.0,
+  349.23,
+  329.63,
+  0,
+];
+
+const List<double> bgmBass = [
+  110.0,
+  0,
+  110.0,
+  0,
+  98.0,
+  0,
+  98.0,
+  0,
+  87.31,
+  0,
+  87.31,
+  0,
+  82.41,
+  0,
+  82.41,
+  0,
+  98.0,
+  0,
+  98.0,
+  0,
+  110.0,
+  0,
+  110.0,
+  0,
+  87.31,
+  0,
+  87.31,
+  0,
+  73.42,
+  0,
+  73.42,
+  0,
+];
 
 const Map<String, Color> pieceColors = {
   'I': Color(0xFF00FFFF),
@@ -540,7 +613,7 @@ class _TetrisHomePageState extends State<TetrisHomePage> {
           Expanded(
             child: _menuButton(
               engine.shadowEnabled ? 'SHADOW ON' : 'SHADOW OFF',
-              () => engine.shadowEnabled = !engine.shadowEnabled,
+              engine.toggleShadow,
               dense: true,
             ),
           ),
@@ -548,7 +621,7 @@ class _TetrisHomePageState extends State<TetrisHomePage> {
           Expanded(
             child: _menuButton(
               engine.soundEnabled ? 'SOUND ON' : 'SOUND OFF',
-              () => engine.soundEnabled = !engine.soundEnabled,
+              engine.toggleSound,
               dense: true,
             ),
           ),
@@ -641,6 +714,169 @@ class _TetrisHomePageState extends State<TetrisHomePage> {
   }
 }
 
+class ProceduralAudioEngine {
+  final List<AudioPlayer> _players = List.generate(16, (_) => AudioPlayer());
+  final Map<String, Uint8List> _toneCache = {};
+  Timer? _bgmTimer;
+  int _bgmStep = 0;
+  int _playerCursor = 0;
+
+  bool _soundEnabled = true;
+  bool _gameActive = false;
+  bool _gamePaused = false;
+
+  ProceduralAudioEngine() {
+    for (final player in _players) {
+      player.setPlayerMode(PlayerMode.lowLatency);
+      player.setReleaseMode(ReleaseMode.stop);
+    }
+  }
+
+  void updateState({
+    required bool soundEnabled,
+    required bool gameActive,
+    required bool gamePaused,
+  }) {
+    _soundEnabled = soundEnabled;
+    _gameActive = gameActive;
+    _gamePaused = gamePaused;
+    _updateBgmState();
+  }
+
+  void playSfx(String kind) {
+    if (!_soundEnabled) return;
+    if (kind == 'start') {
+      _playTone(440, 0.08, waveform: 'square', gain: 0.05, delayMs: 0);
+      _playTone(660, 0.10, waveform: 'square', gain: 0.05, delayMs: 90);
+    } else if (kind == 'rotate') {
+      _playTone(620, 0.05, waveform: 'triangle', gain: 0.04, delayMs: 0);
+    } else if (kind == 'drop') {
+      _playTone(220, 0.08, waveform: 'square', gain: 0.05, delayMs: 0);
+    } else if (kind == 'clear') {
+      _playTone(700, 0.07, waveform: 'square', gain: 0.05, delayMs: 0);
+      _playTone(880, 0.09, waveform: 'square', gain: 0.05, delayMs: 80);
+    } else if (kind == 'gameover') {
+      _playTone(300, 0.12, waveform: 'sawtooth', gain: 0.05, delayMs: 0);
+      _playTone(220, 0.18, waveform: 'sawtooth', gain: 0.05, delayMs: 130);
+    } else if (kind == 'pause') {
+      _playTone(500, 0.05, waveform: 'triangle', gain: 0.04, delayMs: 0);
+    } else if (kind == 'hold') {
+      _playTone(760, 0.04, waveform: 'triangle', gain: 0.04, delayMs: 0);
+    }
+  }
+
+  void _updateBgmState() {
+    final shouldPlay = _soundEnabled && _gameActive && !_gamePaused;
+    if (!shouldPlay) {
+      _bgmTimer?.cancel();
+      _bgmTimer = null;
+      return;
+    }
+    if (_bgmTimer != null) return;
+
+    void tick() {
+      if (!(_soundEnabled && _gameActive && !_gamePaused)) return;
+      final step = _bgmStep % bgmMelody.length;
+      final melodyFreq = bgmMelody[step];
+      final bassFreq = bgmBass[step % bgmBass.length];
+
+      if (melodyFreq > 0) {
+        _playTone(melodyFreq, bgmBeatSeconds * 0.92, waveform: 'sine', gain: 0.014, delayMs: 0);
+      }
+      if (bassFreq > 0) {
+        _playTone(bassFreq, bgmBeatSeconds * 0.90, waveform: 'triangle', gain: 0.01, delayMs: 0);
+      }
+      _bgmStep++;
+    }
+
+    tick();
+    _bgmTimer = Timer.periodic(Duration(milliseconds: (bgmBeatSeconds * 1000).round()), (_) => tick());
+  }
+
+  void _playTone(
+    double freq,
+    double durationSec, {
+    required String waveform,
+    required double gain,
+    required int delayMs,
+  }) {
+    if (freq <= 0 || !_soundEnabled) return;
+    final act = () {
+      final key = '${waveform}_${freq.toStringAsFixed(2)}_${durationSec.toStringAsFixed(3)}_${gain.toStringAsFixed(3)}';
+      final data = _toneCache.putIfAbsent(key, () => _synthesizeWav(freq, durationSec, waveform, gain));
+      final player = _players[_playerCursor % _players.length];
+      _playerCursor++;
+      player.play(BytesSource(data), volume: 1.0);
+    };
+
+    if (delayMs <= 0) {
+      act();
+    } else {
+      Timer(Duration(milliseconds: delayMs), act);
+    }
+  }
+
+  Uint8List _synthesizeWav(double freq, double durationSec, String waveform, double gain) {
+    const sampleRate = 44100;
+    final sampleCount = math.max(1, (durationSec * sampleRate).round());
+    final dataSize = sampleCount * 2;
+    final totalSize = 44 + dataSize;
+
+    final bytes = Uint8List(totalSize);
+    final bd = ByteData.view(bytes.buffer);
+
+    void writeStr(int offset, String s) {
+      for (int i = 0; i < s.length; i++) {
+        bd.setUint8(offset + i, s.codeUnitAt(i));
+      }
+    }
+
+    writeStr(0, 'RIFF');
+    bd.setUint32(4, 36 + dataSize, Endian.little);
+    writeStr(8, 'WAVE');
+    writeStr(12, 'fmt ');
+    bd.setUint32(16, 16, Endian.little);
+    bd.setUint16(20, 1, Endian.little);
+    bd.setUint16(22, 1, Endian.little);
+    bd.setUint32(24, sampleRate, Endian.little);
+    bd.setUint32(28, sampleRate * 2, Endian.little);
+    bd.setUint16(32, 2, Endian.little);
+    bd.setUint16(34, 16, Endian.little);
+    writeStr(36, 'data');
+    bd.setUint32(40, dataSize, Endian.little);
+
+    for (int i = 0; i < sampleCount; i++) {
+      final t = i / sampleRate;
+      final phase = 2 * math.pi * freq * t;
+      double sample;
+      if (waveform == 'square') {
+        sample = math.sin(phase) >= 0 ? 1.0 : -1.0;
+      } else if (waveform == 'triangle') {
+        final normalized = (freq * t) % 1.0;
+        sample = 4.0 * (normalized - 0.5).abs() - 1.0;
+      } else if (waveform == 'sawtooth') {
+        final normalized = (freq * t) % 1.0;
+        sample = 2.0 * normalized - 1.0;
+      } else {
+        sample = math.sin(phase);
+      }
+
+      final env = math.exp(-6.0 * (i / sampleCount));
+      final value = (sample * gain * env * 32767).clamp(-32767, 32767).toInt();
+      bd.setInt16(44 + i * 2, value, Endian.little);
+    }
+
+    return bytes;
+  }
+
+  Future<void> dispose() async {
+    _bgmTimer?.cancel();
+    for (final player in _players) {
+      await player.dispose();
+    }
+  }
+}
+
 class CompetitionEntry {
   CompetitionEntry({
     required this.name,
@@ -707,6 +943,8 @@ class Piece {
 }
 
 class TetrisEngine extends ChangeNotifier {
+  final ProceduralAudioEngine _audio = ProceduralAudioEngine();
+
   List<List<Color?>> board = List.generate(boardHeight, (_) => List<Color?>.filled(boardWidth, null));
 
   Piece? currentPiece;
@@ -752,7 +990,16 @@ class TetrisEngine extends ChangeNotifier {
 
   TetrisEngine() {
     _loadCompetitionScores();
+    _syncAudioState();
     _startTicker();
+  }
+
+  void _syncAudioState() {
+    _audio.updateState(
+      soundEnabled: soundEnabled,
+      gameActive: gameActive,
+      gamePaused: gamePaused,
+    );
   }
 
   List<CompetitionEntry> get topScores {
@@ -821,6 +1068,8 @@ class TetrisEngine extends ChangeNotifier {
     nextPiece = _createRandomPiece();
     _spawnNewPiece();
     _showFx('READY', const Color(0xFF00FFCC), 550);
+    _audio.playSfx('start');
+    _syncAudioState();
     notifyListeners();
   }
 
@@ -831,6 +1080,7 @@ class TetrisEngine extends ChangeNotifier {
     fastDropActive = false;
     fastDropDisabledForPiece = false;
     _showFx('', const Color(0xFF00FFCC), 0);
+    _syncAudioState();
     notifyListeners();
   }
 
@@ -841,12 +1091,31 @@ class TetrisEngine extends ChangeNotifier {
   void togglePause() {
     if (!gameActive) return;
     gamePaused = !gamePaused;
+    _audio.playSfx('pause');
+    _syncAudioState();
+    notifyListeners();
+  }
+
+  void toggleShadow() {
+    shadowEnabled = !shadowEnabled;
+    _audio.playSfx('rotate');
+    notifyListeners();
+  }
+
+  void toggleSound() {
+    soundEnabled = !soundEnabled;
+    _syncAudioState();
+    if (soundEnabled) {
+      _audio.playSfx('rotate');
+    }
     notifyListeners();
   }
 
   void rotateCurrent() {
     if (!gameActive || gamePaused || currentPiece == null) return;
-    rotate(currentPiece!);
+    if (rotate(currentPiece!)) {
+      _audio.playSfx('rotate');
+    }
     notifyListeners();
   }
 
@@ -870,6 +1139,8 @@ class TetrisEngine extends ChangeNotifier {
 
   void holdCurrent() {
     if (!gameActive || gamePaused || currentPiece == null || !canHold) return;
+
+    _audio.playSfx('hold');
 
     final nextCurrent = Piece(
       type: currentPiece!.type,
@@ -936,7 +1207,9 @@ class TetrisEngine extends ChangeNotifier {
     }
 
     if (absX < tapThreshold && absY < tapThreshold && elapsedMs < 360) {
-      rotate(currentPiece!);
+      if (rotate(currentPiece!)) {
+        _audio.playSfx('rotate');
+      }
       fastDropDisabledForPiece = false;
       return;
     }
@@ -1032,6 +1305,8 @@ class TetrisEngine extends ChangeNotifier {
     fastDropActive = false;
     _recordCompetitionScore();
     _showFx('GAME OVER', const Color(0xFFFF3366), 900);
+    _audio.playSfx('gameover');
+    _syncAudioState();
   }
 
   void _recordCompetitionScore() {
@@ -1128,7 +1403,10 @@ class TetrisEngine extends ChangeNotifier {
     final shape = tetrominoes[piece.type]![piece.rotation].map((row) => [...row]).toList();
     if (piece.flipped) {
       for (final row in shape) {
-        row.reverse();
+        final reversed = row.reversed.toList();
+        row
+          ..clear()
+          ..addAll(reversed);
       }
     }
     return shape;
@@ -1220,6 +1498,7 @@ class TetrisEngine extends ChangeNotifier {
     if (distance > 0) {
       score += distance * hardDropBonus;
       shakeFrames = 4;
+      _audio.playSfx('drop');
     }
     placePiece(piece);
     _spawnNewPiece();
@@ -1234,6 +1513,7 @@ class TetrisEngine extends ChangeNotifier {
     } else {
       _refreshLockDelayFromAction(currentPiece!);
       _showFx('FLIP', const Color(0xFFFFFF00), 400);
+      _audio.playSfx('rotate');
     }
   }
 
@@ -1278,6 +1558,7 @@ class TetrisEngine extends ChangeNotifier {
       _addScore(linesCleared);
       clearAnimationFrame = 0;
       shakeFrames = math.max(shakeFrames, 6);
+      _audio.playSfx('clear');
       if (linesCleared == 4) {
         _showFx('TETRIS!', const Color(0xFFFFEF33), 900);
       } else {
@@ -1349,6 +1630,7 @@ class TetrisEngine extends ChangeNotifier {
   void dispose() {
     _ticker?.cancel();
     _fxTimer?.cancel();
+    unawaited(_audio.dispose());
     super.dispose();
   }
 }
