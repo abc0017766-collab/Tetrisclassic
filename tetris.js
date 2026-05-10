@@ -164,6 +164,10 @@ class Game {
             startTime: 0,
             pointerId: null
         };
+        this.clickState = {
+            lastClickTime: 0,
+            clickCount: 0
+        };
 
         // Input tracking
         this.keys = {};
@@ -218,6 +222,7 @@ class Game {
         }
 
         this.bindSwipeControls();
+        this.bindDoubleClickControls();
         this.bindOverlayTouchStart();
         this.bindMainControls();
         this.updateShadowButtonLabel();
@@ -779,6 +784,29 @@ class Game {
             this.swipeState.pointerId = null;
             this.fastDropDisabledForPiece = false;
         }, { passive: true });
+    }
+
+    bindDoubleClickControls() {
+        const doubleClickThreshold = 320; // milliseconds
+
+        // Detect double-click and flip (rotate 180 degrees)
+        this.canvas.addEventListener('click', (event) => {
+            if (!this.gameActive || this.gamePaused || !this.currentPiece) return;
+
+            const now = performance.now();
+            const timeSinceLastClick = now - this.clickState.lastClickTime;
+
+            if (timeSinceLastClick < doubleClickThreshold) {
+                // Double-click detected: rotate twice for 180-degree flip
+                this.rotate(this.currentPiece);
+                this.rotate(this.currentPiece);
+                this.playSfx('rotate');
+                event.preventDefault();
+            }
+
+            this.clickState.lastClickTime = now;
+            this.clickState.clickCount = (timeSinceLastClick < doubleClickThreshold) ? 2 : 1;
+        });
     }
 
     resizeCanvases() {
