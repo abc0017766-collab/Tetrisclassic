@@ -926,6 +926,7 @@ class Game {
             rotation: 0,
             x: Math.floor(BOARD_WIDTH / 2) - 1,
             y: 0,
+            visualOffset: 0,
             data: TETROMINOES[type]
         };
     }
@@ -938,6 +939,7 @@ class Game {
         this.lockDelayStart = 0;
         this.fastDropActive = false;
         this.fastDropDisabledForPiece = true;
+        this.currentPiece.visualOffset = 0;
 
         if (this.collides(this.currentPiece)) {
             this.gameOver();
@@ -953,6 +955,7 @@ class Game {
             rotation: 0,
             x: Math.floor(BOARD_WIDTH / 2) - 1,
             y: 0,
+            visualOffset: 0,
             data: TETROMINOES[this.currentPiece.type]
         };
 
@@ -968,6 +971,7 @@ class Game {
                 rotation: 0,
                 x: Math.floor(BOARD_WIDTH / 2) - 1,
                 y: 0,
+                visualOffset: 0,
                 data: TETROMINOES[swap]
             };
         }
@@ -1286,23 +1290,26 @@ class Game {
             }
         }
 
-        // Gravity
+        // Smooth gravity: accumulate visual offset instead of discrete steps
         const gravity = GRAVITY_BASE + (this.level - 1) * 0.01;
-        this.dropCounter += gravity;
+        this.currentPiece.visualOffset += gravity;
 
-        if (this.dropCounter >= 1) {
+        // Move grid position when visual offset accumulates to a full block
+        while (this.currentPiece.visualOffset >= 1) {
             if (!this.softDrop(this.currentPiece)) {
                 if (!this.lockDelayActive) {
                     this.lockDelayActive = true;
                     this.lockDelayStart = now;
                 }
+                break;
             }
-            this.dropCounter = 0;
+            this.currentPiece.visualOffset -= 1;
         }
 
         // Drag-down fast fall affects only the current piece.
         if (this.fastDropActive && this.currentPiece) {
-            for (let i = 0; i < FAST_DROP_STEPS; i++) {
+            this.currentPiece.visualOffset += FAST_DROP_STEPS * 0.25;
+            while (this.currentPiece.visualOffset >= 1) {
                 if (!this.softDrop(this.currentPiece)) {
                     if (!this.lockDelayActive) {
                         this.lockDelayActive = true;
@@ -1313,6 +1320,7 @@ class Game {
                     this.fastDropDisabledForPiece = true;
                     break;
                 }
+                this.currentPiece.visualOffset -= 1;
             }
         }
 
@@ -1384,11 +1392,12 @@ class Game {
         if (ghost.y === piece.y) return;
 
         const shape = ghost.data.rotations[ghost.rotation];
+        const visualY = ghost.y + (ghost.visualOffset || 0);
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
                 if (!shape[y][x]) continue;
                 const gx = ghost.x + x;
-                const gy = ghost.y + y;
+                const gy = visualY + y;
                 if (gy >= 0) {
                     this.drawStyledBlock(this.ctx, gx * BLOCK_SIZE, gy * BLOCK_SIZE, BLOCK_SIZE, ghost.data.color, 0.32);
                 }
@@ -1501,13 +1510,14 @@ class Game {
 
     drawPiece(piece) {
         const shape = piece.data.rotations[piece.rotation];
+        const visualY = piece.y + (piece.visualOffset || 0);
 
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
                 if (!shape[y][x]) continue;
 
                 const boardX = piece.x + x;
-                const boardY = piece.y + y;
+                const boardY = visualY + y;
 
                 if (boardY >= 0) {
                     this.drawStyledBlock(this.ctx, boardX * BLOCK_SIZE, boardY * BLOCK_SIZE, BLOCK_SIZE, piece.data.color);
