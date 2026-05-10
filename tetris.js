@@ -671,14 +671,14 @@ class Game {
                 this.swipeState.holdTimeoutId = setTimeout(() => {
                     if (this.swipeState.tracking && this.gameActive && !this.gamePaused && this.currentPiece) {
                         this.swipeState.holdActivated = true;
-                        // Flip: rotate 180 degrees by advancing 2 rotations
-                        const oldRotation = this.currentPiece.rotation;
-                        this.currentPiece.rotation = (this.currentPiece.rotation + 2) % this.currentPiece.data.rotations.length;
+                        // Flip: toggle horizontal mirror (no rotation change)
+                        const oldFlipped = this.currentPiece.flipped;
+                        this.currentPiece.flipped = !this.currentPiece.flipped;
                         
-                        // Check for collision after 180-degree rotation
+                        // Check for collision after flip
                         if (this.collides(this.currentPiece)) {
                             // Revert if collision
-                            this.currentPiece.rotation = oldRotation;
+                            this.currentPiece.flipped = oldFlipped;
                         } else {
                             // Success: refresh lock delay and show feedback
                             this.refreshLockDelayFromAction(this.currentPiece);
@@ -927,8 +927,18 @@ class Game {
             x: Math.floor(BOARD_WIDTH / 2) - 1,
             y: 0,
             visualOffset: 0,
+            flipped: false,
             data: TETROMINOES[type]
         };
+    }
+
+    getShapeForPiece(piece) {
+        let shape = piece.data.rotations[piece.rotation];
+        if (piece.flipped) {
+            // Horizontal flip: reverse each row
+            shape = shape.map(row => [...row].reverse());
+        }
+        return shape;
     }
 
     spawnNewPiece() {
@@ -956,6 +966,7 @@ class Game {
             x: Math.floor(BOARD_WIDTH / 2) - 1,
             y: 0,
             visualOffset: 0,
+            flipped: false,
             data: TETROMINOES[this.currentPiece.type]
         };
 
@@ -972,6 +983,7 @@ class Game {
                 x: Math.floor(BOARD_WIDTH / 2) - 1,
                 y: 0,
                 visualOffset: 0,
+                flipped: false,
                 data: TETROMINOES[swap]
             };
         }
@@ -983,7 +995,7 @@ class Game {
     }
 
     collides(piece) {
-        const shape = piece.data.rotations[piece.rotation];
+        const shape = this.getShapeForPiece(piece);
 
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
@@ -1387,6 +1399,7 @@ class Game {
             x: piece.x,
             y: piece.y,
             rotation: piece.rotation,
+            flipped: piece.flipped,
             data: piece.data,
             visualOffset: 0  // Ghost never uses animation offset
         };
@@ -1401,7 +1414,7 @@ class Game {
 
         if (ghost.y === piece.y) return;
 
-        const shape = ghost.data.rotations[ghost.rotation];
+        const shape = this.getShapeForPiece(ghost);
         const visualY = ghost.y;  // Ghost renders at integer grid position
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
@@ -1519,7 +1532,7 @@ class Game {
     }
 
     drawPiece(piece) {
-        const shape = piece.data.rotations[piece.rotation];
+        const shape = this.getShapeForPiece(piece);
         const visualY = piece.y + (piece.visualOffset || 0);
 
         for (let y = 0; y < shape.length; y++) {
