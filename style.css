@@ -205,6 +205,14 @@ body.in-game #mainMenu {
     background-color: transparent;
     width: 100%;
     justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.board-flip-btn {
+    min-width: 88px;
+    margin-left: 8px;
+    align-self: center;
 }
 
 .mobile-hud {
@@ -554,6 +562,17 @@ body.in-game #mainMenu {
         align-items: center;
         width: 100%;
         justify-content: flex-start;
+        position: relative;
+    }
+
+    .board-flip-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        min-width: 58px;
+        padding: 7px 6px;
+        z-index: 2;
     }
 
     #gameCanvas {
@@ -632,6 +651,17 @@ body.in-game #mainMenu {
         justify-content: center;
         align-items: center;
         gap: 0;
+        position: relative;
+    }
+
+    .board-flip-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        min-width: 58px;
+        padding: 7px 6px;
+        z-index: 2;
     }
 
     .side-panel {
